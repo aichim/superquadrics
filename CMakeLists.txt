@@ -8,6 +8,6 @@ include_directories(${PCL_INCLUDE_DIRS} include/)
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-add_executable (superquadrics_visualize MACOSX_BUNDLE src/main_visualize.cpp)
-target_link_libraries (superquadrics_visualize ${PCL_LIBRARIES})
+add_executable (superquadrics_sample MACOSX_BUNDLE src/main_sample.cpp)
+target_link_libraries (superquadrics_sample ${PCL_LIBRARIES})
 
