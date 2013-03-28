@@ -63,7 +63,7 @@ main (int argc,
     vtkSmartPointer<vtkSampleFunction> sample_function = vtkSmartPointer<vtkSampleFunction>::New ();
     sample_function->SetSampleDimensions (200, 200, 200);
     sample_function->SetImplicitFunction (superquadric);
-    sample_function->SetModelBounds (-1, 1, -1, 1, -1, 1);
+    sample_function->SetModelBounds (0, 1, 0, 1, 0, 1);
 
 
     vtkSmartPointer<vtkContourFilter> sample_contour = vtkSmartPointer<vtkContourFilter>::New ();
