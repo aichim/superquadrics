@@ -59,11 +59,12 @@ main (int argc,
     superquadric->SetThetaRoundness (epsilon_1); /// epsilon_1
     superquadric->SetPhiRoundness (epsilon_2); /// epsilon_2
     superquadric->SetScale (a, b, c);
+    superquadric->SetSize (1.);
 
     vtkSmartPointer<vtkSampleFunction> sample_function = vtkSmartPointer<vtkSampleFunction>::New ();
     sample_function->SetSampleDimensions (200, 200, 200);
     sample_function->SetImplicitFunction (superquadric);
-    sample_function->SetModelBounds (0, 1, 0, 1, 0, 1);
+    sample_function->SetModelBounds (-1, 1, -1, 1, -1, 1);
 
 
     vtkSmartPointer<vtkContourFilter> sample_contour = vtkSmartPointer<vtkContourFilter>::New ();
