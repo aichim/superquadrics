@@ -97,16 +97,12 @@ main (int argc,
   {
     // Create a superquadric
     vtkSmartPointer<vtkSuperquadricSource> superquadricSource = vtkSmartPointer<vtkSuperquadricSource>::New();
-    /// Piet Hein Super-Egg
-    //  superquadricSource->SetThetaRoundness (1.);
-    //  superquadricSource->SetPhiRoundness (0.8);
-    //  superquadricSource->SetScale (3., 3., 4.);
-
     superquadricSource->SetThetaRoundness (epsilon_1); /// epsilon_1
     superquadricSource->SetPhiRoundness (epsilon_2); /// epsilon_2
     superquadricSource->SetScale (a, b, c);
     superquadricSource->SetPhiResolution (1000);
     superquadricSource->SetThetaResolution (1000);
+    superquadricSource->SetSize (1.);
 
     // Create a mapper and actor
     vtkSmartPointer<vtkPolyDataMapper> superquadricMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
