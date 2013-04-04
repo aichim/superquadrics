@@ -127,6 +127,10 @@ protected:
     operator () (const VectorX &x,
                  VectorX &fvec) const;
 
+    int
+    df (const VectorX &x,
+        Eigen::Matrix<MatScalar, Eigen::Dynamic, Eigen::Dynamic> &fjac) const;
+
     const SuperquadricFittingLM<PointT, MatScalar> *estimator_;
   };
 

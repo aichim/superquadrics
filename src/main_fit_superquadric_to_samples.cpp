@@ -11,25 +11,22 @@ main (int argc,
   PointCloud<PointXYZ>::Ptr cloud (new PointCloud<PointXYZ> ());
   io::loadPCDFile (argv[1], *cloud);
 
-  /*cloud->clear ();
-  for (size_t i = 0; i < 50; ++i)
-  {
-    PointXYZ p;
-    p.x = i;
-    p.y = i*2;
-    p.z = i *3;
-    cloud->push_back (p);
-  }*/
+//  for (size_t i = 0; i < cloud->size (); ++i)
+//    (*cloud)[i].getVector3fMap () /= 200.;
 
   SuperquadricFittingLM<PointXYZ, double> sq_fit;
   sq_fit.setInputCloud (cloud);
-  Eigen::Matrix<double, Eigen::Dynamic, 1> params (6);
+  Eigen::Matrix<double, Eigen::Dynamic, 1> params (11);
   Eigen::Matrix4d transformation;
   sq_fit.fit (params, transformation);
 
 
-
+  params[8] = params[8] - floor (params[8] / M_PI) * M_PI;
+  params[9] = params[9] - floor (params[9] / M_PI) * M_PI;
+  params[10] = params[10] - floor (params[10] / M_PI) * M_PI;
   std::cout << "optimized parameters: " << params << std::endl;
+
+
 
   return (0);
 }
