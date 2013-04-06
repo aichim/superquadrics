@@ -34,7 +34,7 @@ public:
   setIndices (const pcl::IndicesConstPtr &indices)
   { indices_ = indices; }
 
-  void
+  double
   fit (VectorX &parameters,
        Eigen::Matrix<MatScalar, 4, 4> &transformation) const;
 

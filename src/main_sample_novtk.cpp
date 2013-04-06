@@ -96,10 +96,10 @@ main (int argc,
         p[2] = c * (sin(eta) / fabs(sin(eta))) * pow (fabs(sin (eta)), epsilon_1);
         p[3] = 1.;
 
-        p = Eigen::Vector4d (transformation * p);
-        point.x = p[0];
-        point.y = p[1];
-        point.z = p[2];
+        Eigen::Vector4d p_tr = transformation.inverse () * p;
+        point.x = p_tr[0];
+        point.y = p_tr[1];
+        point.z = p_tr[2];
 
         if (isFinite (point))
           cloud.push_back (point);
@@ -112,17 +112,17 @@ main (int argc,
 
 //        PCL_INFO ("f %f\n", superellipsoid_f);
 
-        double e1 = epsilon_1,
-            e2 = epsilon_2,
-            tx = transf_vec[0],
-            ty = transf_vec[1],
-            tz = transf_vec[2],
-            ax = transf_vec[3],
-            ay = transf_vec[4],
-            az = transf_vec[5],
-            x = p[0],
-            y = p[1],
-            z = p[2];
+//        double e1 = epsilon_1,
+//            e2 = epsilon_2,
+//            tx = transf_vec[0],
+//            ty = transf_vec[1],
+//            tz = transf_vec[2],
+//            ax = transf_vec[3],
+//            ay = transf_vec[4],
+//            az = transf_vec[5],
+//            x = p[0],
+//            y = p[1],
+//            z = p[2];
 
         // Formula from Maple
 //        double val = pow(pow((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a, (double) (2 / e2)) + pow(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b, (double) (2 / e2)), (double) (e2 / e1)) + pow(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c, (double) (2 / e1));
