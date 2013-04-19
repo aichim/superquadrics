@@ -16,12 +16,10 @@ public:
   SuperquadricFittingLM ();
 
   SuperquadricFittingLM (const SuperquadricFittingLM &src)
-  {
-  }
+  { }
 
   SuperquadricFittingLM& operator = (const SuperquadricFittingLM &src)
-  {
-  }
+  { }
 
   virtual
   ~SuperquadricFittingLM () {}
@@ -34,14 +32,20 @@ public:
   setIndices (const pcl::IndicesConstPtr &indices)
   { indices_ = indices; }
 
+  void
+  preAlign (Eigen::Matrix<MatScalar, 4, 4> &transformation_prealign,
+            Eigen::Matrix<MatScalar, 3, 1> &variances);
+
   double
   fit (VectorX &parameters,
-       Eigen::Matrix<MatScalar, 4, 4> &transformation) const;
+       Eigen::Matrix<MatScalar, 4, 4> &transformation);
 
 
 protected:
   CloudConstPtr input_;
+  CloudPtr input_prealigned_;
   pcl::IndicesConstPtr indices_;
+  bool pre_align_;
 
   /** \brief The vector of residual weights. Used internally in the LM loop. */
   std::vector<double> weights_;

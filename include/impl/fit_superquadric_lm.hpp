@@ -4,32 +4,93 @@
 #include "superquadric_formulas.h"
 #include <pcl/common/centroid.h>
 #include <unsupported/Eigen/NonLinearOptimization>
+#include <pcl/common/pca.h>
+
 
 
 template<typename PointT, typename MatScalar>
 SuperquadricFittingLM<PointT, MatScalar>::SuperquadricFittingLM ()
+  : pre_align_ (true)
 {
 }
 
+
+template<typename PointT, typename MatScalar> void
+SuperquadricFittingLM<PointT, MatScalar>::preAlign (Eigen::Matrix<MatScalar, 4, 4> &transformation_prealign,
+                                                    Eigen::Matrix<MatScalar, 3, 1> &variances)
+{
+  /// Compute the centroid
+  Eigen::Vector4d centroid;
+  pcl::compute3DCentroid (*input_, centroid);
+  Eigen::Matrix<MatScalar, 4, 4> transformation_centroid (Eigen::Matrix<MatScalar, 4, 4>::Identity ());
+  transformation_centroid (0, 3) = - centroid (0);
+  transformation_centroid (1, 3) = - centroid (1);
+  transformation_centroid (2, 3) = - centroid (2);
+
+  std::cout << "centroid: " << centroid << std::endl;
+  std::cout << "from " << input_->size () << " points" << std::endl;
+
+  /// Compute the PCA
+  pcl::PCA<PointT> pca;
+  pca.setInputCloud (input_);
+  Eigen::Vector3f eigenvalues = pca.getEigenValues ();
+  Eigen::Matrix3f eigenvectors = pca.getEigenVectors ();
+
+  std::cout << "eigenvectors:\n" << eigenvectors << std::endl;
+
+  /// Align the z-axis with the first PCA axis
+  Eigen::Matrix<MatScalar, 4, 4> transformation_pca (Eigen::Matrix<MatScalar, 4, 4>::Identity ());
+  transformation_pca (0, 0) = eigenvectors (0, 1);
+  transformation_pca (1, 0) = eigenvectors (1, 1);
+  transformation_pca (2, 0) = eigenvectors (2, 1);
+
+  transformation_pca (0, 1) = eigenvectors (0, 2);
+  transformation_pca (1, 1) = eigenvectors (1, 2);
+  transformation_pca (2, 1) = eigenvectors (2, 2);
+
+  transformation_pca (0, 2) = eigenvectors (0, 0);
+  transformation_pca (1, 2) = eigenvectors (1, 0);
+  transformation_pca (2, 2) = eigenvectors (2, 0);
+
+  transformation_prealign = transformation_pca * transformation_centroid;
+
+  std::cout << "pre-align transformation:\n" << transformation_prealign << std::endl;
+
+  /// Set the variances
+  eigenvalues /= static_cast<float> (input_->size ());
+  variances (0) = sqrt (eigenvalues (1));
+  variances (1) = sqrt (eigenvalues (2));
+  variances (2) = sqrt (eigenvalues (0));
+
+  std::cout << "variances:\n" << variances << std::endl << eigenvalues << std::endl;
+}
+
+
 template<typename PointT, typename MatScalar> double
 SuperquadricFittingLM<PointT, MatScalar>::fit (VectorX &parameters,
-                                               Eigen::Matrix<MatScalar, 4, 4> &transformation) const
+                                               Eigen::Matrix<MatScalar, 4, 4> &transformation)
 {
+  Eigen::Matrix<MatScalar, 4, 4> transformation_prealign (Eigen::Matrix<MatScalar, 4, 4>::Identity ());
+  Eigen::Matrix<MatScalar, 3, 1> variances;
+  variances (0) = variances (1) = variances (2) = static_cast <MatScalar> (1.);
+  if (pre_align_)
+  {
+    preAlign (transformation_prealign, variances);
+    input_prealigned_.reset (new Cloud ());
+    pcl::transformPointCloud (*input_, *input_prealigned_, transformation_prealign);
+  }
+
+  // Initialize the parameters based on the input cloud
   int n_unknowns = 11;
   /// e1, e2, a, b, c
   VectorX xvec (n_unknowns);
-  xvec[0] = xvec[1] = xvec[2] = xvec[3] = xvec[4] = 1.;
+  xvec[0] = xvec[1] = 1.;
+  xvec[2] = variances (0) * 3;
+  xvec[3] = variances (1) * 3;
+  xvec[4] = variances (2) * 3;
   xvec[5] = xvec[6] = xvec[7] = xvec[8] = xvec[9] = xvec[10] = 0.;
 
-  // Initialize the parameters based on the input cloud
-  // The center of the superquadric should be the centroid of the cloud
-  Eigen::Vector4d centroid;
-  pcl::compute3DCentroid (*input_, centroid);
-  xvec[5] = -centroid[0];
-  xvec[6] = -centroid[1];
-  xvec[7] = -centroid[2];
-
-
+/*
   // The scales are the dimensions of the cloud on each axis.
   Eigen::Vector3f min (Eigen::Vector3f (1.f, 1.f, 1.f) * std::numeric_limits<float>::max ()),
       max (Eigen::Vector3f (1.f, 1.f, 1.f) * std::numeric_limits<float>::min ());
@@ -50,14 +111,13 @@ SuperquadricFittingLM<PointT, MatScalar>::fit (VectorX &parameters,
   xvec[2] = (max[0] - min[0]) / 2.;
   xvec[3] = (max[1] - min[1]) / 2.;
   xvec[4] = (max[2] - min[2]) / 2.;
-
+*/
   std::cout << "initial parameters:\n" << xvec << std::endl;
 
   /// TODO take care of the case with indices
 
-  OptimizationFunctor functor (input_->size (), this);
+  OptimizationFunctor functor (input_prealigned_->size (), this);
 
-  /// TODO replace numerical diff with actual df - use Maple
 //  Eigen::NumericalDiff<OptimizationFunctor> num_diff (functor);
 //  Eigen::LevenbergMarquardt<Eigen::NumericalDiff<OptimizationFunctor>, MatScalar> lm (num_diff);
   Eigen::LevenbergMarquardt<OptimizationFunctor, MatScalar> lm (functor);
@@ -66,9 +126,6 @@ SuperquadricFittingLM<PointT, MatScalar>::fit (VectorX &parameters,
   std::cout << xvec << std::endl;
 
   parameters = xvec;
-
-
-
 
 
 
@@ -101,6 +158,10 @@ SuperquadricFittingLM<PointT, MatScalar>::fit (VectorX &parameters,
   transformation (2, 1) = -aux_ad * aux_f + aux_b * aux_e;
   transformation (2, 2) = aux_a * aux_c;
 
+
+  transformation = Eigen::Matrix<MatScalar, 4, 4> (transformation) * transformation_prealign;
+//  transformation = transformation_prealign;
+
   MatScalar final_error = computeSuperQuadricError<PointT, MatScalar> (input_,
                                                                        xvec[0], xvec[1], xvec[2], xvec[3], xvec[4],
                                                                        transformation);
@@ -112,7 +173,7 @@ template<typename PointT, typename MatScalar> int
 SuperquadricFittingLM<PointT, MatScalar>::OptimizationFunctor::operator () (const VectorX &xvec,
                                                                             VectorX &fvec) const
 {
-  const Cloud &points = *estimator_->input_;
+  const Cloud &points = *estimator_->input_prealigned_;
 
   MatScalar e1 = xvec[0],
       e2 = xvec[1],
@@ -184,7 +245,7 @@ SuperquadricFittingLM<PointT, MatScalar>::OptimizationFunctor::df (const VectorX
 {
 //  PCL_INFO ("%d %d %d %d\n", xvec.rows (), xvec.cols (), fjac.rows (), fjac.cols ());
 
-  const Cloud &points = *estimator_->input_;
+  const Cloud &points = *estimator_->input_prealigned_;
   double e1 = xvec[0],
       e2 = xvec[1],
       a = xvec[2],
@@ -219,7 +280,7 @@ template<typename PointT, typename MatScalar> int
 SuperquadricFittingLM<PointT, MatScalar>::OptimizationFunctorWithIndices::operator() (const VectorX &xvec,
                                                                                       VectorX &fvec) const
 {
-  const Cloud &points = *estimator_->input_;
+  const Cloud &points = *estimator_->input_prealigned_;
   const std::vector<int> &indices = *estimator_->indices_;
 
   for (int i = 0; i < values (); ++i)

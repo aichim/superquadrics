@@ -37,9 +37,9 @@ main (int argc,
   std::vector<double> transf_vec;
   console::parse_x_arguments (argc, argv, "-transform", transf_vec);
 
-  if (transf_vec.size () != 0 && transf_vec.size () != 6)
+  if (transf_vec.size () != 0 && transf_vec.size () != 16)
   {
-    PCL_ERROR ("Transformation vector must have 6 entries\n");
+    PCL_ERROR ("Transformation vector/matrix must have 16 entries\n");
     return (-1);
   }
 
@@ -47,35 +47,28 @@ main (int argc,
             epsilon_1, epsilon_2, a, b, c);
 
   Eigen::Matrix4d transformation (Eigen::Matrix4d::Identity ());
-  if (transf_vec.size () == 6)
+  if (transf_vec.size () == 16)
   {
     transformation.setZero ();
-    transformation (0, 3) = transf_vec[0];
-    transformation (1, 3) = transf_vec[1];
-    transformation (2, 3) = transf_vec[2];
-    transformation (3, 3) = 1.;
+    transformation (0, 0) = transf_vec[0];
+    transformation (0, 1) = transf_vec[1];
+    transformation (0, 2) = transf_vec[2];
+    transformation (0, 3) = transf_vec[3];
 
-    double angle_x = transf_vec[3],
-        angle_y = transf_vec[4],
-        angle_z = transf_vec[5];
-    double aux_a = cos (angle_x),
-        aux_b = sin (angle_x),
-        aux_c = cos (angle_y),
-        aux_d = sin (angle_y),
-        aux_e = cos (angle_z),
-        aux_f = sin(angle_z),
-        aux_ad = aux_a * aux_d,
-        aux_bd = aux_b * aux_d;
+    transformation (1, 0) = transf_vec[4];
+    transformation (1, 1) = transf_vec[5];
+    transformation (1, 2) = transf_vec[6];
+    transformation (1, 3) = transf_vec[7];
 
-    transformation (0, 0) = aux_c * aux_e;
-    transformation (0, 1) = -aux_c * aux_f;
-    transformation (0, 2) = -aux_d;
-    transformation (1, 0) = -aux_bd * aux_e + aux_a * aux_f;
-    transformation (1, 1) = aux_bd * aux_f + aux_a * aux_e;
-    transformation (1, 2) = -aux_b * aux_c;
-    transformation (2, 0) = aux_ad * aux_e + aux_b * aux_f;
-    transformation (2, 1) = -aux_ad * aux_f + aux_b * aux_e;
-    transformation (2, 2) = aux_a * aux_c;
+    transformation (2, 0) = transf_vec[8];
+    transformation (2, 1) = transf_vec[9];
+    transformation (2, 2) = transf_vec[10];
+    transformation (2, 3) = transf_vec[11];
+
+    transformation (3, 0) = transf_vec[12];
+    transformation (3, 1) = transf_vec[13];
+    transformation (3, 2) = transf_vec[14];
+    transformation (3, 3) = transf_vec[15];
 
     std::cout << "using transformation:\n" << transformation << std::endl;
   }
