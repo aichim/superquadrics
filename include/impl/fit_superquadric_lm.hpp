@@ -11,6 +11,7 @@
 template<typename PointT, typename MatScalar>
 SuperquadricFittingLM<PointT, MatScalar>::SuperquadricFittingLM ()
   : pre_align_ (true)
+  , pre_align_axis_ (2)
 {
 }
 
@@ -38,19 +39,28 @@ SuperquadricFittingLM<PointT, MatScalar>::preAlign (Eigen::Matrix<MatScalar, 4, 
 
   std::cout << "eigenvectors:\n" << eigenvectors << std::endl;
 
-  /// Align the z-axis with the first PCA axis
+  /// Align the first PCA axis with the prealign axis
+  Eigen::Vector3f vec_aux = eigenvectors.col (0);
+  eigenvectors.col (0) = eigenvectors.col (pre_align_axis_);
+  eigenvectors.col (pre_align_axis_) = vec_aux;
+
+  float aux_ev = eigenvalues (0);
+  eigenvalues (0) = eigenvalues (pre_align_axis_);
+  eigenvalues (pre_align_axis_) = aux_ev;
+
+
   Eigen::Matrix<MatScalar, 4, 4> transformation_pca (Eigen::Matrix<MatScalar, 4, 4>::Identity ());
-  transformation_pca (0, 0) = eigenvectors (0, 1);
-  transformation_pca (1, 0) = eigenvectors (1, 1);
-  transformation_pca (2, 0) = eigenvectors (2, 1);
+  transformation_pca (0, 0) = eigenvectors (0, 0);
+  transformation_pca (1, 0) = eigenvectors (1, 0);
+  transformation_pca (2, 0) = eigenvectors (2, 0);
 
-  transformation_pca (0, 1) = eigenvectors (0, 2);
-  transformation_pca (1, 1) = eigenvectors (1, 2);
-  transformation_pca (2, 1) = eigenvectors (2, 2);
+  transformation_pca (0, 1) = eigenvectors (0, 1);
+  transformation_pca (1, 1) = eigenvectors (1, 1);
+  transformation_pca (2, 1) = eigenvectors (2, 1);
 
-  transformation_pca (0, 2) = eigenvectors (0, 0);
-  transformation_pca (1, 2) = eigenvectors (1, 0);
-  transformation_pca (2, 2) = eigenvectors (2, 0);
+  transformation_pca (0, 2) = eigenvectors (0, 2);
+  transformation_pca (1, 2) = eigenvectors (1, 2);
+  transformation_pca (2, 2) = eigenvectors (2, 2);
 
   transformation_prealign = transformation_pca * transformation_centroid;
 
@@ -58,17 +68,16 @@ SuperquadricFittingLM<PointT, MatScalar>::preAlign (Eigen::Matrix<MatScalar, 4, 
 
   /// Set the variances
   eigenvalues /= static_cast<float> (input_->size ());
-  variances (0) = sqrt (eigenvalues (1));
-  variances (1) = sqrt (eigenvalues (2));
-  variances (2) = sqrt (eigenvalues (0));
+  variances (0) = sqrt (eigenvalues (0));
+  variances (1) = sqrt (eigenvalues (1));
+  variances (2) = sqrt (eigenvalues (2));
 
   std::cout << "variances:\n" << variances << std::endl << eigenvalues << std::endl;
 }
 
 
 template<typename PointT, typename MatScalar> double
-SuperquadricFittingLM<PointT, MatScalar>::fit (VectorX &parameters,
-                                               Eigen::Matrix<MatScalar, 4, 4> &transformation)
+SuperquadricFittingLM<PointT, MatScalar>::fit (SuperquadricParams<MatScalar> &parameters)
 {
   Eigen::Matrix<MatScalar, 4, 4> transformation_prealign (Eigen::Matrix<MatScalar, 4, 4>::Identity ());
   Eigen::Matrix<MatScalar, 3, 1> variances;
@@ -125,11 +134,8 @@ SuperquadricFittingLM<PointT, MatScalar>::fit (VectorX &parameters,
 
   std::cout << xvec << std::endl;
 
-  parameters = xvec;
 
-
-
-
+  Eigen::Matrix<MatScalar, 4, 4> &transformation = parameters.transform;
   transformation.setZero ();
   transformation (0, 3) = xvec[5];
   transformation (1, 3) = xvec[6];
@@ -159,12 +165,19 @@ SuperquadricFittingLM<PointT, MatScalar>::fit (VectorX &parameters,
   transformation (2, 2) = aux_a * aux_c;
 
 
-  transformation = Eigen::Matrix<MatScalar, 4, 4> (transformation) * transformation_prealign;
-//  transformation = transformation_prealign;
+
+  parameters.e1 = xvec[0];
+  parameters.e2 = xvec[1];
+  parameters.a = xvec[2];
+  parameters.b = xvec[3];
+  parameters.c = xvec[4];
+  parameters.transform = Eigen::Matrix<MatScalar, 4, 4> (transformation) * transformation_prealign;
 
   MatScalar final_error = computeSuperQuadricError<PointT, MatScalar> (input_,
                                                                        xvec[0], xvec[1], xvec[2], xvec[3], xvec[4],
                                                                        transformation);
+
+
   return (final_error);
 }
 

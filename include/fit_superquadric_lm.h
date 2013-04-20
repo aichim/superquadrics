@@ -4,6 +4,18 @@
 #include <pcl/common/common.h>
 
 
+template<typename Scalar>
+struct SuperquadricParams
+{
+  SuperquadricParams ()
+    : e1 (0.), e2 (0.), a (1.), b (1.), c (1.)
+    , transform (Eigen::Matrix<Scalar, 4, 4>::Identity ())
+  {}
+
+  Scalar e1, e2, a, b, c;
+  Eigen::Matrix<Scalar, 4, 4> transform;
+};
+
 template <typename PointT, typename MatScalar = double>
 class SuperquadricFittingLM
 {
@@ -25,6 +37,14 @@ public:
   ~SuperquadricFittingLM () {}
 
   void
+  setPreAlign (bool pre_align,
+               int pre_align_axis = 2)
+  {
+    pre_align_ = pre_align;
+    pre_align_axis_ = pre_align_axis;
+  }
+
+  void
   setInputCloud (const CloudConstPtr &cloud)
   { input_ = cloud; }
 
@@ -37,8 +57,7 @@ public:
             Eigen::Matrix<MatScalar, 3, 1> &variances);
 
   double
-  fit (VectorX &parameters,
-       Eigen::Matrix<MatScalar, 4, 4> &transformation);
+  fit (SuperquadricParams<MatScalar> &parameters);
 
 
 protected:
@@ -46,6 +65,7 @@ protected:
   CloudPtr input_prealigned_;
   pcl::IndicesConstPtr indices_;
   bool pre_align_;
+  int pre_align_axis_ = 2;
 
   /** \brief The vector of residual weights. Used internally in the LM loop. */
   std::vector<double> weights_;
