@@ -65,7 +65,7 @@ protected:
   CloudPtr input_prealigned_;
   pcl::IndicesConstPtr indices_;
   bool pre_align_;
-  int pre_align_axis_ = 2;
+  int pre_align_axis_;
 
   /** \brief The vector of residual weights. Used internally in the LM loop. */
   std::vector<double> weights_;
