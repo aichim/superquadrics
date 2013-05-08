@@ -17,6 +17,7 @@ set (framework_incs include/fit_superquadric_lm.h
                     include/sample_superquadric.h)
 set (framework_impls include/impl/fit_superquadric_lm.hpp
 					 include/impl/fit_superquadric_ceres.hpp
+					 include/impl/superquadric_formulas.hpp
                      include/impl/sample_superquadric.hpp)
 set (framework_srcs src/fit_superquadric_lm.cpp
                     src/fit_superquadric_ceres.cpp

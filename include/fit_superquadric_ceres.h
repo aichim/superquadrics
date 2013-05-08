@@ -3,21 +3,12 @@
 #include <pcl/point_cloud.h>
 #include <pcl/common/common.h>
 
-#include <ceres/ceres.h>
 
 
-template<typename Scalar>
-struct SuperquadricParams
+namespace sq
 {
-  SuperquadricParams ()
-    : e1 (0.), e2 (0.), a (1.), b (1.), c (1.)
-    , transform (Eigen::Matrix<Scalar, 4, 4>::Identity ())
-  {}
-
-  Scalar e1, e2, a, b, c;
-  Eigen::Matrix<Scalar, 4, 4> transform;
-};
-
+template <typename T>
+struct SuperquadricParams;
 
 template <typename PointT, typename MatScalar = double>
 class SuperquadricFittingCeres
@@ -75,6 +66,6 @@ protected:
   bool pre_align_;
   int pre_align_axis_;
 };
-
+}
 
 #include "impl/fit_superquadric_ceres.hpp"

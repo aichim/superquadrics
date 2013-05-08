@@ -1,131 +1,60 @@
 #pragma once
 
-#include <ceres/jet.h>
 
-template <typename Scalar> inline
-Scalar superquadric_function (const Scalar &x,
-                            const Scalar &y,
-                            const Scalar &z,
-                            const Scalar &e1,
-                            const Scalar &e2,
-                            const Scalar &a,
-                            const Scalar &b,
-                            const Scalar &c)
+namespace sq
 {
-//  std::cout << "computing superellipsoid with: " << x << " " << y << " " << z << " " << e1 << " " << e2 << " " << a << " " << b << " " << c << std::endl;
 
-//  std::cout << "abs (" << x / a << ") = " << ceres::abs (x/a) << std::endl;
-
-  Scalar term_1 = pow (ceres::abs (x / a), Scalar (2.) / e2);
-  Scalar term_2 = pow (ceres::abs (y / b), Scalar (2.) / e2);
-  Scalar term_3 = pow (ceres::abs (z / c), Scalar (2.) / e1);
-  Scalar superellipsoid_f = pow (ceres::abs (term_1 + term_2), e2 / e1) + term_3;
-
-  Scalar value = (pow (superellipsoid_f, e1 / Scalar (2.)) - Scalar (1.)) * pow (a*b*c, Scalar (0.25));
-//  Scalar value = (pow (superellipsoid_f, e1 / 2.) - 1.);
-
-//  std::cout << "term_1 = " << term_1 << std::endl;
-//  std::cout << "term_2 = " << term_2 << std::endl;
-//  std::cout << "term_3 = " << term_3 << std::endl;
-//  std::cout << "superellipsoid_f = " << superellipsoid_f << std::endl;
-
-  return (value);
-}
-
-
-template<typename Scalar> inline
-void superquadric_derivative (const Scalar &x,
-                              const Scalar &y,
-                              const Scalar &z,
-                              const Scalar &e1,
-                              const Scalar &e2,
-                              const Scalar &a,
-                              const Scalar &b,
-                              const Scalar &c,
-                              const Scalar &tx,
-                              const Scalar &ty,
-                              const Scalar &tz,
-                              const Scalar &ax,
-                              const Scalar &ay,
-                              const Scalar &az,
-                              Scalar &dS_de1,
-                              Scalar &dS_de2,
-                              Scalar &dS_da,
-                              Scalar &dS_db,
-                              Scalar &dS_dc,
-                              Scalar &dS_dtx,
-                              Scalar &dS_dty,
-                              Scalar &dS_dtz,
-                              Scalar &dS_dax,
-                              Scalar &dS_day,
-                              Scalar &dS_daz)
+/** \brief Structure containing the parameters used to define a superquadric */
+template<typename Scalar>
+struct SuperquadricParams
 {
-  dS_de1 = pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * (0.5000000000e0 * log(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) + 0.5000000000e0 * e1 * (-pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) * e2 * pow(e1, -0.2e1) * log(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2)) - 0.20e1 * pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1) * pow(e1, -0.2e1) * log(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c))) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1))) * pow(a * b * c, 0.25e0);
-  dS_de2 = 0.5000000000e0 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * e1 * pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) * (0.1e1 / e1 * log(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2)) + e2 / e1 * (-0.20e1 * pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) * pow(e2, -0.2e1) * log(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a)) - 0.20e1 * pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2) * pow(e2, -0.2e1) * log(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b))) / (pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2))) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0);
-  dS_da = -0.1000000000e1 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) * pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) * fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) / ((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) * (cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) * pow(a, -0.2e1) / fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) / (pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2)) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0) + 0.25e0 * (pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) - 0.1e1) * pow(a * b * c, -0.75e0) * b * c;
-  dS_db = -0.1000000000e1 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) * pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2) * fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) / (((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) * ((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) * pow(b, -0.2e1) / fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) / (pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2)) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0) + 0.25e0 * (pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) - 0.1e1) * pow(a * b * c, -0.75e0) * a * c;
-  dS_dc = -0.1000000000e1 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1) * fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) / (((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) * ((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) * pow(c, -0.2e1) / fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0) + 0.25e0 * (pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) - 0.1e1) * pow(a * b * c, -0.75e0) * a * b;
-  dS_dtx = 0.1000000000e1 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) * pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) * fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) / ((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) / a / fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) / (pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2)) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0);
-  dS_dty = 0.1000000000e1 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) * pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2) * fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) / (((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) / b / fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) / (pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2)) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0);
-  dS_dtz = 0.1000000000e1 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1) * fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) / (((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) / c / fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0);
-  dS_dax = 0.5000000000e0 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * e1 * (0.20e1 * pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) / e1 * pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2) * fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) / (((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) * ((-cos(ax) * sin(ay) * cos(az) - sin(ax) * sin(az)) * x + (cos(ax) * sin(ay) * sin(az) - sin(ax) * cos(az)) * y - cos(ax) * cos(ay) * z) / b / fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) / (pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2)) + 0.20e1 * pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1) / e1 * fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) / (((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) * ((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z) / c / fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c)) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0);
-  dS_day = 0.5000000000e0 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * e1 * (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) * e2 / e1 * (0.20e1 * pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) / e2 * fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) / ((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) * (-sin(ay) * cos(az) * x + sin(ay) * sin(az) * y + cos(ay) * z) / a / fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) + 0.20e1 * pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2) / e2 * fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) / (((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) * (-sin(ax) * cos(ay) * cos(az) * x + sin(ax) * cos(ay) * sin(az) * y + sin(ax) * sin(ay) * z) / b / fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b)) / (pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2)) + 0.20e1 * pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1) / e1 * fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) / (((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) * (cos(ax) * cos(ay) * cos(az) * x - cos(ax) * cos(ay) * sin(az) * y - cos(ax) * sin(ay) * z) / c / fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c)) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0);
-  dS_daz = 0.5000000000e0 * pow(pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1), 0.5000000000e0 * e1) * e1 * (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) * e2 / e1 * (0.20e1 * pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) / e2 * fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) / ((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) * (-cos(ay) * sin(az) * x - cos(ay) * cos(az) * y) / a / fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a) + 0.20e1 * pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2) / e2 * fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) / (((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b) * ((sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * x + (sin(ax) * sin(ay) * cos(az) - cos(ax) * sin(az)) * y) / b / fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b)) / (pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2)) + 0.20e1 * pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1) / e1 * fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) / (((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c) * ((-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * x + (-cos(ax) * sin(ay) * cos(az) - sin(ax) * sin(az)) * y) / c / fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c)) / (pow(pow(fabs((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a), 0.20e1 / e2) + pow(fabs(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b), 0.20e1 / e2), e2 / e1) + pow(fabs(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c), 0.20e1 / e1)) * pow(a * b * c, 0.25e0);
-}
+  SuperquadricParams ()
+    : e1 (0.), e2 (0.), a (1.), b (1.), c (1.)
+    , transform (Eigen::Matrix<Scalar, 4, 4>::Identity ())
+  {}
+
+  Scalar e1, e2, a, b, c;
+  Eigen::Matrix<Scalar, 4, 4> transform;
+};
 
 
+template <typename Scalar> inline Scalar
+superquadric_function (const Scalar &x,
+                       const Scalar &y,
+                       const Scalar &z,
+                       const Scalar &e1,
+                       const Scalar &e2,
+                       const Scalar &a,
+                       const Scalar &b,
+                       const Scalar &c);
 
-template<typename PointT, typename Scalar>
-Scalar computeSuperQuadricError (typename pcl::PointCloud<PointT>::ConstPtr cloud,
-                                 const Scalar &e1,
-                                 const Scalar &e2,
-                                 const Scalar &a,
-                                 const Scalar &b,
-                                 const Scalar &c,
-                                 const Eigen::Matrix<Scalar, 4, 4> &transform)
-{
-  Scalar error = 0.;
-  for (size_t i = 0; i < cloud->size (); ++i)
-  {
-    Eigen::Matrix<Scalar, 4, 1> xyz (static_cast<Scalar> ((*cloud)[i].x),
-                                     static_cast<Scalar> ((*cloud)[i].y),
-                                     static_cast<Scalar> ((*cloud)[i].z),
-                                     static_cast<Scalar> (1.));
-    Eigen::Matrix<Scalar, 4, 1> xyz_tr = transform * xyz;
-//    double op = Eigen::Matrix<Scalar, 3, 1> (xyz_tr[0], xyz_tr[1], xyz_tr[2]).norm ();
+/** Computed with Maple, used for the Eigen LM, Ceres uses Automatic Differentiation*/
+template<typename Scalar> inline void
+superquadric_derivative (const Scalar &x, const Scalar &y, const Scalar &z,
+                         const Scalar &e1, const Scalar &e2,
+                         const Scalar &a, const Scalar &b, const Scalar &c,
+                         const Scalar &tx, const Scalar &ty, const Scalar &tz,
+                         const Scalar &ax, const Scalar &ay, const Scalar &az,
+                         Scalar &dS_de1, Scalar &dS_de2,
+                         Scalar &dS_da, Scalar &dS_db, Scalar &dS_dc,
+                         Scalar &dS_dtx, Scalar &dS_dty, Scalar &dS_dtz,
+                         Scalar &dS_dax, Scalar &dS_day, Scalar &dS_daz);
 
-//    PCL_INFO ("xyz %f %f %f   xyz_tr %f %f %f op = %f\n",
-//              xyz[0], xyz[1], xyz[2], xyz_tr[0], xyz_tr[1], xyz_tr[2], op);
-
-    double val = /*op **/ superquadric_function (xyz_tr[0], xyz_tr[1], xyz_tr[2],
-                                             e1, e2, a, b, c);
-    error += val * val;
-  }
-
-  error /= static_cast<Scalar> (cloud->size ());
-
-  return (error);
-}
+/** \brief Compute the error. */
+template<typename PointT, typename Scalar> Scalar
+computeSuperQuadricError (typename pcl::PointCloud<PointT>::ConstPtr cloud,
+                          const Scalar &e1, const Scalar &e2,
+                          const Scalar &a, const Scalar &b, const Scalar &c,
+                          const Eigen::Matrix<Scalar, 4, 4> &transform);
 
 
 /// Stirling's approximation
-template<typename Scalar>
-Scalar betaFunction (Scalar x, Scalar y)
-{
-  return (sqrt (2 * M_PI) * pow (x, (x - 0.5)) * pow (y, y - 0.5) / pow (x+y, x+y - 0.5));
+template<typename Scalar> Scalar
+betaFunction (Scalar x, Scalar y);
+
+template<typename Scalar> Scalar
+computeSuperQuadricVolume (const Scalar &e1, const Scalar &e2,
+                           const Scalar &a, const Scalar &b, const Scalar &c);
 }
 
-
-template<typename Scalar>
-Scalar computeSuperQuadricVolume (const Scalar &e1,
-                                  const Scalar &e2,
-                                  const Scalar &a,
-                                  const Scalar &b,
-                                  const Scalar &c)
-{
-  Scalar volume = 2. * e1 * e1 * a * b * c
-                  * betaFunction (fabs (e1/2. + 1), fabs (e1))
-                  * betaFunction (fabs (e2 / 2.), fabs (e2 / 2.));
-
-  return (volume);
-}
+#include "impl/superquadric_formulas.hpp"

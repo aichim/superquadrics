@@ -76,9 +76,9 @@ splitClusters (PointCloud<PointXYZ>::ConstPtr cloud_in,
       demeanPointCloud (*(*cluster_it), centroid, *cloud_centered);
 
       PCL_INFO ("Fitting a superquadric to a cloud with %ld points.\n", cloud_centered->size ());
-      SuperquadricFittingLM<PointXYZ, double> sq_fit;
+      sq::SuperquadricFittingLM<PointXYZ, double> sq_fit;
       sq_fit.setInputCloud (cloud_centered);
-      SuperquadricParams<double> params;
+      sq::SuperquadricParams<double> params;
       double fit_error = sq_fit.fit (params);
 
       PCL_INFO ("Superquadric fit error = %f\n", fit_error);
@@ -173,9 +173,9 @@ mergeClusters (std::vector<PointCloud<PointXYZ>::Ptr> &clusters_in,
           demeanPointCloud (*clusters_union, centroid, *cloud_centered);
 
           /// Fit a superquadric in the union
-          SuperquadricFittingLM<PointXYZ, double> sq_fit;
+          sq::SuperquadricFittingLM<PointXYZ, double> sq_fit;
           sq_fit.setInputCloud (cloud_centered);
-          SuperquadricParams<double> params;
+          sq::SuperquadricParams<double> params;
           double fit_error = sq_fit.fit (params);
           PCL_INFO ("Superquadric fit error = %f\n", fit_error);
 

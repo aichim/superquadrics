@@ -4,17 +4,11 @@
 #include <pcl/common/common.h>
 
 
-template<typename Scalar>
-struct SuperquadricParams
+namespace sq
 {
-  SuperquadricParams ()
-    : e1 (0.), e2 (0.), a (1.), b (1.), c (1.)
-    , transform (Eigen::Matrix<Scalar, 4, 4>::Identity ())
-  {}
 
-  Scalar e1, e2, a, b, c;
-  Eigen::Matrix<Scalar, 4, 4> transform;
-};
+template <typename t>
+struct SuperquadricParams;
 
 template <typename PointT, typename MatScalar = double>
 class SuperquadricFittingLM
@@ -208,6 +202,8 @@ protected:
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 };
+
+}
 
 #include "impl/fit_superquadric_lm.hpp"
 

@@ -96,30 +96,6 @@ main (int argc,
 
         if (isFinite (point))
           cloud.push_back (point);
-
-
-//        double term_1 = pow (fabs(p.x/a), 2./epsilon_2);
-//        double term_2 = pow (fabs(p.y/b), 2./epsilon_2);
-//        double term_3 = pow (fabs(p.z/c), 2./epsilon_1);
-//        double superellipsoid_f = pow (fabs(term_1 + term_2), epsilon_2/epsilon_1) + term_3;
-
-//        PCL_INFO ("f %f\n", superellipsoid_f);
-
-//        double e1 = epsilon_1,
-//            e2 = epsilon_2,
-//            tx = transf_vec[0],
-//            ty = transf_vec[1],
-//            tz = transf_vec[2],
-//            ax = transf_vec[3],
-//            ay = transf_vec[4],
-//            az = transf_vec[5],
-//            x = p[0],
-//            y = p[1],
-//            z = p[2];
-
-        // Formula from Maple
-//        double val = pow(pow((cos(ay) * cos(az) * x - cos(ay) * sin(az) * y + sin(ay) * z + tx) / a, (double) (2 / e2)) + pow(((-sin(ax) * sin(ay) * cos(az) + cos(ax) * sin(az)) * x + (sin(ax) * sin(ay) * sin(az) + cos(ax) * cos(az)) * y - sin(ax) * cos(ay) * z + ty) / b, (double) (2 / e2)), (double) (e2 / e1)) + pow(((cos(ax) * sin(ay) * cos(az) + sin(ax) * sin(az)) * x + (-cos(ax) * sin(ay) * sin(az) + sin(ax) * cos(az)) * y + cos(ax) * cos(ay) * z + tz) / c, (double) (2 / e1));
-//        PCL_INFO ("val = %f\n", val);
       }
     }
 

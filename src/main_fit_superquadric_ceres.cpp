@@ -4,6 +4,7 @@
 
 using namespace pcl;
 
+
 int
 main (int argc,
       char **argv)
@@ -13,15 +14,15 @@ main (int argc,
   PointCloud<PointXYZ>::Ptr cloud_in (new PointCloud<PointXYZ> ());
   io::loadPCDFile (argv[1], *cloud_in);
 
-  SuperquadricFittingCeres<PointXYZ, double> sq_fit;
+  sq::SuperquadricFittingCeres<PointXYZ, double> sq_fit;
   sq_fit.setInputCloud (cloud_in);
 
 
   double min_fit = std::numeric_limits<double>::max ();
-  SuperquadricParams<double> min_params;
+  sq::SuperquadricParams<double> min_params;
   for (int i = 0; i < 3; ++i)
   {
-    SuperquadricParams<double> params;
+    sq::SuperquadricParams<double> params;
     sq_fit.setPreAlign (true, i);
     double fit = sq_fit.fit (params);
     printf ("pre_align axis %d, fit %f\n", i, fit);
