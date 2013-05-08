@@ -3,6 +3,11 @@
 #include <pcl/console/print.h>
 #include <pcl/console/parse.h>
 
+#include <boost/algorithm/string.hpp>
+
+#include "sample_superquadric.h"
+#include "superquadric_formulas.h"
+
 using namespace pcl;
 
 
@@ -10,12 +15,9 @@ int
 main (int argc,
       char **argv)
 {
-  PCL_INFO ("Syntax: %s [-e1 x.x] [-e2 y.y] [-a z.z] [-b t.t] [-c u.u] [-visualize 0/1] [-output xxx.pcd]\n", argv[0]);
+  PCL_INFO ("Syntax: %s [-e1 x.x] [-e2 y.y] [-a z.z] [-b t.t] [-c u.u] [-output xxx.pcd]\n", argv[0]);
 
   /// Parse command line arguments
-  bool visualize_enabled = true;
-  console::parse_argument (argc, argv, "-visualize", visualize_enabled);
-
   double epsilon_1 = 0.;
   console::parse_argument (argc, argv, "-e1", epsilon_1);
 
@@ -31,7 +33,7 @@ main (int argc,
   double c = 1.;
   console::parse_argument (argc, argv, "-c", c);
 
-  std::string output_file = "";
+  std::string output_file = "sample.pcd";
   console::parse_argument (argc, argv, "-output", output_file);
 
   std::vector<double> transf_vec;
@@ -74,34 +76,37 @@ main (int argc,
   }
 
 
+  /// Prepare the sampling instance
+  sq::SuperquadricSampling<PointXYZ, double> sampling;
+  sq::SuperquadricParameters<double> params;
+  params.e1 = epsilon_1;
+  params.e2 = epsilon_2;
+  params.a = a;
+  params.b = b;
+  params.c = c;
+
+  sampling.setParameters (params);
+  sampling.setTransformation (transformation);
+
+
   /// Sample the superquadric to a pcd file
-  if (output_file != "")
+  std::string extension = output_file.substr (output_file.size () - 3);
+  boost::algorithm::to_lower (extension);
+  if (extension == "pcd")
   {
+
     PointCloud<PointXYZ> cloud;
-    for (double eta = -M_PI / 2.0; eta < M_PI / 2.; eta += 0.01)
-    {
-      for (double mu = -M_PI; mu < M_PI; mu += 0.01)
-      {
-        PointXYZ point;
-        Eigen::Vector4d p;
-        p[0] = a * (cos(eta) / fabs(cos(eta))) * pow (fabs(cos (eta)), epsilon_1) * (cos(mu) / fabs(cos(mu))) * pow (fabs (cos (mu)), epsilon_2);
-        p[1] = b * (cos(eta) / fabs(cos(eta))) * pow (fabs(cos (eta)), epsilon_1) * (sin(mu) / fabs(sin(mu))) * pow (fabs (sin (mu)), epsilon_2);
-        p[2] = c * (sin(eta) / fabs(sin(eta))) * pow (fabs(sin (eta)), epsilon_1);
-        p[3] = 1.;
-
-        Eigen::Vector4d p_tr = transformation.inverse () * p;
-        point.x = p_tr[0];
-        point.y = p_tr[1];
-        point.z = p_tr[2];
-
-        if (isFinite (point))
-          cloud.push_back (point);
-      }
-    }
-
-    cloud.height = 1.;
-    cloud.width = cloud.size ();
+    sampling.generatePointCloud (cloud);
     io::savePCDFile (output_file, cloud, true);
+  }
+  else if (extension == "obj")
+  {
+
+  }
+  else
+  {
+    PCL_ERROR ("Unknown file format, use .pcd or .obj\n");
+    return (-1);
   }
 
 

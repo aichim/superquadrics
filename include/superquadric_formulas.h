@@ -6,9 +6,9 @@ namespace sq
 
 /** \brief Structure containing the parameters used to define a superquadric */
 template<typename Scalar>
-struct SuperquadricParams
+struct SuperquadricParameters
 {
-  SuperquadricParams ()
+  SuperquadricParameters ()
     : e1 (0.), e2 (0.), a (1.), b (1.), c (1.)
     , transform (Eigen::Matrix<Scalar, 4, 4>::Identity ())
   {}

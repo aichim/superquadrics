@@ -8,7 +8,7 @@
 namespace sq
 {
 template <typename T>
-struct SuperquadricParams;
+struct SuperquadricParameters;
 
 template <typename PointT, typename MatScalar = double>
 class SuperquadricFittingCeres
@@ -44,7 +44,7 @@ public:
 
 
   double
-  fit (SuperquadricParams<MatScalar> &parameters);
+  fit (SuperquadricParameters<MatScalar> &parameters);
 
 
   struct SuperquadricCostFunctor

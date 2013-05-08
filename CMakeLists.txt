@@ -30,11 +30,11 @@ set (libs_to_link ${PCL_LIBRARIES} ${CERES_LIBRARIES} superquadrics_framework)
 
 
 
-add_executable (superquadrics_sample MACOSX_BUNDLE src/main_sample.cpp)
-target_link_libraries (superquadrics_sample ${PCL_LIBRARIES})
+add_executable (sample_superquadric_vtk MACOSX_BUNDLE src/main_sample_superquadric_vtk.cpp)
+target_link_libraries (sample_superquadric_vtk ${PCL_LIBRARIES})
 
-add_executable (superquadrics_sample_novtk MACOSX_BUNDLE src/main_sample_novtk.cpp)
-target_link_libraries (superquadrics_sample_novtk ${PCL_LIBRARIES})
+add_executable (sample_superquadric src/main_sample_superquadric.cpp)
+target_link_libraries (sample_superquadric ${libs_to_link})
 
 add_executable (fit_superquadric_to_samples MACOSX_BUNDLE src/main_fit_superquadric_to_samples.cpp)
 target_link_libraries (fit_superquadric_to_samples ${PCL_LIBRARIES} superquadrics_framework)

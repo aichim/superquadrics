@@ -82,7 +82,7 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::preAlign (Eigen::Matrix<MatScal
 
 ////////////////////////////////////////////////////////////////////////////////
 template<typename PointT, typename MatScalar> double
-sq::SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParams<MatScalar> &parameters)
+sq::SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParameters<MatScalar> &parameters)
 {
   Eigen::Matrix<MatScalar, 4, 4> transformation_prealign (Eigen::Matrix<MatScalar, 4, 4>::Identity ());
   Eigen::Matrix<MatScalar, 3, 1> variances;

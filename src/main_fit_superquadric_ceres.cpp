@@ -19,10 +19,10 @@ main (int argc,
 
 
   double min_fit = std::numeric_limits<double>::max ();
-  sq::SuperquadricParams<double> min_params;
+  sq::SuperquadricParameters<double> min_params;
   for (int i = 0; i < 3; ++i)
   {
-    sq::SuperquadricParams<double> params;
+    sq::SuperquadricParameters<double> params;
     sq_fit.setPreAlign (true, i);
     double fit = sq_fit.fit (params);
     printf ("pre_align axis %d, fit %f\n", i, fit);

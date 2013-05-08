@@ -8,7 +8,7 @@ namespace sq
 {
 
 template <typename t>
-struct SuperquadricParams;
+struct SuperquadricParameters;
 
 template <typename PointT, typename MatScalar = double>
 class SuperquadricFittingLM
@@ -51,7 +51,7 @@ public:
             Eigen::Matrix<MatScalar, 3, 1> &variances);
 
   double
-  fit (SuperquadricParams<MatScalar> &parameters);
+  fit (SuperquadricParameters<MatScalar> &parameters);
 
 
 protected:
