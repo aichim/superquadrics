@@ -78,9 +78,9 @@ main (int argc,
   if (output_file != "")
   {
     PointCloud<PointXYZ> cloud;
-    for (double eta = -M_PI / 2.0; eta < M_PI / 2.; eta += 0.05)
+    for (double eta = -M_PI / 2.0; eta < M_PI / 2.; eta += 0.01)
     {
-      for (double mu = -M_PI; mu < M_PI; mu += 0.05)
+      for (double mu = -M_PI; mu < M_PI; mu += 0.01)
       {
         PointXYZ point;
         Eigen::Vector4d p;
@@ -125,7 +125,7 @@ main (int argc,
 
     cloud.height = 1.;
     cloud.width = cloud.size ();
-    io::savePCDFile (output_file, cloud);
+    io::savePCDFile (output_file, cloud, true);
   }
 
 

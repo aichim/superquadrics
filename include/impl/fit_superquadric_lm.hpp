@@ -94,9 +94,9 @@ SuperquadricFittingLM<PointT, MatScalar>::fit (SuperquadricParams<MatScalar> &pa
   /// e1, e2, a, b, c
   VectorX xvec (n_unknowns);
   xvec[0] = xvec[1] = 1.;
-  xvec[2] = variances (0) * 3;
-  xvec[3] = variances (1) * 3;
-  xvec[4] = variances (2) * 3;
+  xvec[2] = variances (0) * 3.;
+  xvec[3] = variances (1) * 3.;
+  xvec[4] = variances (2) * 3.;
   xvec[5] = xvec[6] = xvec[7] = xvec[8] = xvec[9] = xvec[10] = 0.;
 
 /*
