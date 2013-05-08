@@ -95,12 +95,20 @@ SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParams<MatScalar> 
 
 
   ceres::Problem problem;
-  ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<SuperquadricCostFunctor, 1, 1> (new SuperquadricCostFunctor);
 
-  double x = 5.;
+  double xvec[11];
+  xvec[0] = xvec[1] = 1.;
+  xvec[2] = variances (0) * 3.;
+  xvec[3] = variances (1) * 3.;
+  xvec[4] = variances (2) * 3.;
+  xvec[5] = xvec[6] = xvec[7] = xvec[8] = xvec[9] = xvec[10] = 0.;
+
   for (size_t p_i = 0; p_i < input_prealigned_->size (); ++p_i)
   {
-    problem.AddResidualBlock (cost_function, NULL, &x);
+    PointT &point = (*input_prealigned_)[p_i];
+    ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<SuperquadricCostFunctor, 1, 11> (new SuperquadricCostFunctor (point));
+//    ceres::CostFunction *cost_function = new ceres::NumericDiffCostFunction<SuperquadricCostFunctor, ceres::CENTRAL, 1, 11> (new SuperquadricCostFunctor (point));
+    problem.AddResidualBlock (cost_function, NULL, xvec);
   }
 
 
@@ -113,5 +121,134 @@ SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParams<MatScalar> 
   ceres::Solve (options, &problem, &summary);
 
   std::cout << summary.BriefReport () << std::endl;
-  std::cout << "x : " << x << std::endl;
+
+  printf ("x = ");
+  for (size_t i = 0; i < 11; ++i)
+    printf ("%f ", xvec[i]);
+  printf ("\n");
+  //  std::cout << "x : " << x << std::endl;
+
+
+
+  Eigen::Matrix<MatScalar, 4, 4> &transformation = parameters.transform;
+  transformation.setZero ();
+  transformation (0, 3) = xvec[5];
+  transformation (1, 3) = xvec[6];
+  transformation (2, 3) = xvec[7];
+  transformation (3, 3) = 1.;
+
+  double angle_x = xvec[8],
+      angle_y = xvec[9],
+      angle_z = xvec[10];
+  double aux_a = cos (angle_x),
+      aux_b = sin (angle_x),
+      aux_c = cos (angle_y),
+      aux_d = sin (angle_y),
+      aux_e = cos (angle_z),
+      aux_f = sin (angle_z),
+      aux_ad = aux_a * aux_d,
+      aux_bd = aux_b * aux_d;
+
+  transformation (0, 0) = aux_c * aux_e;
+  transformation (0, 1) = -aux_c * aux_f;
+  transformation (0, 2) = -aux_d;
+  transformation (1, 0) = -aux_bd * aux_e + aux_a * aux_f;
+  transformation (1, 1) = aux_bd * aux_f + aux_a * aux_e;
+  transformation (1, 2) = -aux_b * aux_c;
+  transformation (2, 0) = aux_ad * aux_e + aux_b * aux_f;
+  transformation (2, 1) = -aux_ad * aux_f + aux_b * aux_e;
+  transformation (2, 2) = aux_a * aux_c;
+
+
+
+  parameters.e1 = xvec[0];
+  parameters.e2 = xvec[1];
+  parameters.a = xvec[2];
+  parameters.b = xvec[3];
+  parameters.c = xvec[4];
+  parameters.transform = Eigen::Matrix<MatScalar, 4, 4> (transformation) * transformation_prealign;
+
+  MatScalar final_error = computeSuperQuadricError<PointT, MatScalar> (input_,
+                                                                       xvec[0], xvec[1], xvec[2], xvec[3], xvec[4],
+                                                                       transformation);
+
+
+  return (final_error);
+}
+
+
+
+template <typename PointT, typename MatScalar>
+template <typename T> bool
+SuperquadricFittingCeres<PointT, MatScalar>::SuperquadricCostFunctor::operator () (const T* const xvec, T* residual) const
+{
+  T e1 = xvec[0],
+    e2 = xvec[1],
+    a = xvec[2],
+    b = xvec[3],
+    c = xvec[4];
+  Eigen::Matrix<T, 4, 4> transformation;
+  transformation.setZero ();
+  transformation (0, 3) = xvec[5];
+  transformation (1, 3) = xvec[6];
+  transformation (2, 3) = xvec[7];
+  transformation (3, 3) = T (1.);
+
+  T angle_x = xvec[8],
+      angle_y = xvec[9],
+      angle_z = xvec[10];
+  T aux_a = cos (angle_x),
+      aux_b = sin (angle_x),
+      aux_c = cos (angle_y),
+      aux_d = sin (angle_y),
+      aux_e = cos (angle_z),
+      aux_f = sin (angle_z),
+      aux_ad = aux_a * aux_d,
+      aux_bd = aux_b * aux_d;
+
+  transformation (0, 0) = aux_c * aux_e;
+  transformation (0, 1) = -aux_c * aux_f;
+  transformation (0, 2) = -aux_d;
+  transformation (1, 0) = -aux_bd * aux_e + aux_a * aux_f;
+  transformation (1, 1) = aux_bd * aux_f + aux_a * aux_e;
+  transformation (1, 2) = -aux_b * aux_c;
+  transformation (2, 0) = aux_ad * aux_e + aux_b * aux_f;
+  transformation (2, 1) = -aux_ad * aux_f + aux_b * aux_e;
+  transformation (2, 2) = aux_a * aux_c;
+
+
+  Eigen::Matrix<T, 4, 1> xyz (T (point_.x), T (point_.y), T (point_.z), T (1.));
+  Eigen::Matrix<T, 4, 1> xyz_tr = transformation * xyz;
+
+//  std::cout << "xyz_tr: " << xyz_tr[0] << " " << xyz_tr[1] << " " << xyz_tr[2] << std::endl;
+
+  //    std::cout << xyz << " " << xyz_tr << std::endl;
+  //    std::cout << transformation << std::endl;
+
+
+  //    double term_1 = pow (fabs(xyz_tr[0] / a), 2./e2);
+  //    double term_2 = pow (fabs(xyz_tr[1] / b), 2./e2);
+  //    double term_3 = pow (fabs(xyz_tr[2] / c), 2./e1);
+  //    double superellipsoid_f = pow (fabs(term_1 + term_2), e2/e1) + term_3;
+
+  T op = (Eigen::Matrix<T, 3, 1> (xvec[5], xvec[6], xvec[7]) -
+      Eigen::Matrix<T, 3, 1> (xyz_tr[0], xyz_tr[1], xyz_tr[2])).norm ();
+
+//  std::cout << "op: " << op << std::endl;
+
+//  std::cout << "params xvec: " << xvec[0] << " " << xvec[1] << " " << xvec[2] << " " << xvec[3] << " " << xvec[4] << std::endl;
+//  std::cout << "params before: " << e1 << " " << e2 << " " << a << " " << b << " " << c << std::endl;
+  residual[0] = op *superquadric_function<T> (xyz_tr[0], xyz_tr[1], xyz_tr[2], e1, e2, a, b, c);
+
+
+//  std::cout << "residual (" << xyz[0] << ", " << xyz[1] << ", " << xyz[2] << ") = " << residual[0] << std::endl;
+
+  //    double op = Eigen::Matrix<MatScalar, 3, 1> (xyz_tr[0], xyz_tr[1], xyz_tr[2]).norm ();
+
+
+  //    fvec[i] = /*op */ (pow (superellipsoid_f, e1 / 2.) - 1.) * pow (a*b*c, 0.25);
+  //    PCL_INFO ("fvec[%ld] = %f\n", i, fvec[i]);
+
+
+  return (true);
 }

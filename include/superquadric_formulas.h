@@ -1,3 +1,7 @@
+#pragma once
+
+#include <ceres/jet.h>
+
 template <typename Scalar> inline
 Scalar superquadric_function (const Scalar &x,
                             const Scalar &y,
@@ -8,13 +12,22 @@ Scalar superquadric_function (const Scalar &x,
                             const Scalar &b,
                             const Scalar &c)
 {
-  Scalar term_1 = pow (fabs (x / a), 2. / e2);
-  Scalar term_2 = pow (fabs (y / b), 2. / e2);
-  Scalar term_3 = pow (fabs (z / c), 2. / e1);
-  Scalar superellipsoid_f = pow (fabs (term_1 + term_2), e2 / e1) + term_3;
+//  std::cout << "computing superellipsoid with: " << x << " " << y << " " << z << " " << e1 << " " << e2 << " " << a << " " << b << " " << c << std::endl;
 
-  Scalar value = (pow (superellipsoid_f, e1 / 2.) - 1.) * pow (a*b*c, 0.25);
+//  std::cout << "abs (" << x / a << ") = " << ceres::abs (x/a) << std::endl;
+
+  Scalar term_1 = pow (ceres::abs (x / a), Scalar (2.) / e2);
+  Scalar term_2 = pow (ceres::abs (y / b), Scalar (2.) / e2);
+  Scalar term_3 = pow (ceres::abs (z / c), Scalar (2.) / e1);
+  Scalar superellipsoid_f = pow (ceres::abs (term_1 + term_2), e2 / e1) + term_3;
+
+  Scalar value = (pow (superellipsoid_f, e1 / Scalar (2.)) - Scalar (1.)) * pow (a*b*c, Scalar (0.25));
 //  Scalar value = (pow (superellipsoid_f, e1 / 2.) - 1.);
+
+//  std::cout << "term_1 = " << term_1 << std::endl;
+//  std::cout << "term_2 = " << term_2 << std::endl;
+//  std::cout << "term_3 = " << term_3 << std::endl;
+//  std::cout << "superellipsoid_f = " << superellipsoid_f << std::endl;
 
   return (value);
 }
