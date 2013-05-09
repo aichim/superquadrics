@@ -1,4 +1,6 @@
 #include <pcl/io/pcd_io.h>
+#include <pcl/io/obj_io.h>
+#include <pcl/io/vtk_io.h>
 
 #include <pcl/console/print.h>
 #include <pcl/console/parse.h>
@@ -94,14 +96,20 @@ main (int argc,
   boost::algorithm::to_lower (extension);
   if (extension == "pcd")
   {
-
     PointCloud<PointXYZ> cloud;
     sampling.generatePointCloud (cloud);
     io::savePCDFile (output_file, cloud, true);
   }
-  else if (extension == "obj")
+  else if (extension == "obj" ||
+           extension == "vtk")
   {
+    PolygonMesh mesh;
+    sampling.generateMesh (mesh);
 
+    if (extension == "obj")
+      io::saveOBJFile (output_file, mesh);
+    else if (extension == "vtk")
+      io::saveVTKFile (output_file, mesh);
   }
   else
   {
