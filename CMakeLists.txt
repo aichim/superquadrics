@@ -11,6 +11,12 @@ find_package (Ceres REQUIRED)
 include_directories (${CERES_INCLUDES})
 
 
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 set (framework_incs include/fit_superquadric_lm.h 
 					include/fit_superquadric_ceres.h
                     include/superquadric_formulas.h
@@ -41,7 +47,7 @@ target_link_libraries (fit_superquadric_to_samples ${PCL_LIBRARIES} superquadric
 
 
 add_executable (split_and_merge MACOSX_BUNDLE src/main_split_and_merge.cpp)
-target_link_libraries (split_and_merge ${PCL_LIBRARIES} superquadrics_framework)
+target_link_libraries (split_and_merge ${libs_to_link})
 
 add_executable (fit_superquadric_ceres src/main_fit_superquadric_ceres.cpp)
 target_link_libraries (fit_superquadric_ceres ${libs_to_link})

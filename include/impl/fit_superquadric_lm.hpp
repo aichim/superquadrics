@@ -52,15 +52,15 @@ sq::SuperquadricFittingLM<PointT, MatScalar>::preAlign (Eigen::Matrix<MatScalar,
 
   Eigen::Matrix<MatScalar, 4, 4> transformation_pca (Eigen::Matrix<MatScalar, 4, 4>::Identity ());
   transformation_pca (0, 0) = eigenvectors (0, 0);
-  transformation_pca (1, 0) = eigenvectors (1, 0);
-  transformation_pca (2, 0) = eigenvectors (2, 0);
+  transformation_pca (1, 0) = eigenvectors (0, 1);
+  transformation_pca (2, 0) = eigenvectors (0, 2);
 
-  transformation_pca (0, 1) = eigenvectors (0, 1);
+  transformation_pca (0, 1) = eigenvectors (1, 0);
   transformation_pca (1, 1) = eigenvectors (1, 1);
-  transformation_pca (2, 1) = eigenvectors (2, 1);
+  transformation_pca (2, 1) = eigenvectors (1, 2);
 
-  transformation_pca (0, 2) = eigenvectors (0, 2);
-  transformation_pca (1, 2) = eigenvectors (1, 2);
+  transformation_pca (0, 2) = eigenvectors (2, 0);
+  transformation_pca (1, 2) = eigenvectors (2, 1);
   transformation_pca (2, 2) = eigenvectors (2, 2);
 
   transformation_prealign = transformation_pca * transformation_centroid;

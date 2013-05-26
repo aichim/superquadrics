@@ -55,15 +55,15 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::preAlign (Eigen::Matrix<MatScal
 
   Eigen::Matrix<MatScalar, 4, 4> transformation_pca (Eigen::Matrix<MatScalar, 4, 4>::Identity ());
   transformation_pca (0, 0) = eigenvectors (0, 0);
-  transformation_pca (1, 0) = eigenvectors (1, 0);
-  transformation_pca (2, 0) = eigenvectors (2, 0);
+  transformation_pca (1, 0) = eigenvectors (0, 1);
+  transformation_pca (2, 0) = eigenvectors (0, 2);
 
-  transformation_pca (0, 1) = eigenvectors (0, 1);
+  transformation_pca (0, 1) = eigenvectors (1, 0);
   transformation_pca (1, 1) = eigenvectors (1, 1);
-  transformation_pca (2, 1) = eigenvectors (2, 1);
+  transformation_pca (2, 1) = eigenvectors (1, 2);
 
-  transformation_pca (0, 2) = eigenvectors (0, 2);
-  transformation_pca (1, 2) = eigenvectors (1, 2);
+  transformation_pca (0, 2) = eigenvectors (2, 0);
+  transformation_pca (1, 2) = eigenvectors (2, 1);
   transformation_pca (2, 2) = eigenvectors (2, 2);
 
   transformation_prealign = transformation_pca * transformation_centroid;
@@ -78,6 +78,7 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::preAlign (Eigen::Matrix<MatScal
 
   std::cout << "variances:\n" << variances << std::endl << eigenvalues << std::endl;
 }
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +118,8 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParameters<Mat
   ceres::Solver::Options options;
   options.minimizer_type = ceres::TRUST_REGION;
   options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-  options.minimizer_progress_to_stdout = true;
+//  options.minimizer_progress_to_stdout = true;
+  options.num_threads = 8;
 
   ceres::Solver::Summary summary;
   ceres::Solve (options, &problem, &summary);
