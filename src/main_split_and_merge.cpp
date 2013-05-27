@@ -1,12 +1,47 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/common/pca.h>
 
-#include "fit_superquadric_lm.h"
+#include "fit_superquadric_ceres.h"
+#include "superquadric_formulas.h"
 
 
 using namespace pcl;
 
-const double cluster_sq_error = 5.;
+const double cluster_sq_error = 6000.;
+const size_t min_cluster_points_ = 20;
+
+
+struct SuperquadricCluster
+{
+  PointCloud<PointXYZ>::Ptr cloud;
+  sq::SuperquadricParameters<double> params;
+};
+
+
+double
+fitBestSuperquadric (PointCloud<PointXYZ>::ConstPtr cloud,
+                     sq::SuperquadricParameters<double> &min_params)
+{
+  sq::SuperquadricFittingCeres<PointXYZ, double> sq_fit;
+  sq_fit.setInputCloud (cloud);
+
+  double min_fit = std::numeric_limits<double>::max ();
+  for (int i = 0; i < 3; ++i)
+  {
+    sq::SuperquadricParameters<double> params;
+    sq_fit.setPreAlign (true, i);
+    double fit = sq_fit.fit (params);
+    printf ("pre_align axis %d, fit %f\n", i, fit);
+
+    if (fit < min_fit)
+    {
+      min_fit = fit;
+      min_params = params;
+    }
+  }
+
+  return (min_fit);
+}
 
 void
 splitCluster (PointCloud<PointXYZ>::ConstPtr cloud,
@@ -55,70 +90,68 @@ splitCluster (PointCloud<PointXYZ>::ConstPtr cloud,
 
 void
 splitClusters (PointCloud<PointXYZ>::ConstPtr cloud_in,
-               std::vector<PointCloud<PointXYZ>::Ptr> &clusters_result,
+               std::vector<SuperquadricCluster> &clusters_result,
                std::vector<Eigen::Vector4d> &splitting_planes)
 {
-  std::vector<PointCloud<PointXYZ>::Ptr> clusters_processing;
-  clusters_processing.push_back (PointCloud<PointXYZ>::Ptr (new PointCloud<PointXYZ> (*cloud_in)));
+  std::deque<PointCloud<PointXYZ>::Ptr> cluster_queue;
+  cluster_queue.push_front (PointCloud<PointXYZ>::Ptr (new PointCloud<PointXYZ> (*cloud_in)));
 
-  std::vector<PointCloud<PointXYZ>::Ptr> clusters_processing_next_iteration;
-  std::vector<PointCloud<PointXYZ>::Ptr> clusters_done;
-
-  while (clusters_processing.size () != 0)
+  while (cluster_queue.size () != 0)
   {
-    /// Fit a superquadric in each cluster
-    for (std::vector<PointCloud<PointXYZ>::Ptr>::iterator cluster_it = clusters_processing.begin ();
-         cluster_it != clusters_processing.end (); ++cluster_it)
+    /// Get the last cluster
+    PointCloud<PointXYZ>::Ptr cloud_current = cluster_queue.back ();
+    cluster_queue.pop_back ();
+
+    /// Do not try to fit a superquadric if there are not enough points
+    if (cloud_current->size () < min_cluster_points_)
     {
-      Eigen::Vector4d centroid;
-      pcl::compute3DCentroid (*(*cluster_it), centroid);
-      PointCloud<PointXYZ>::Ptr cloud_centered (new PointCloud<PointXYZ> ());
-      demeanPointCloud (*(*cluster_it), centroid, *cloud_centered);
-
-      PCL_INFO ("Fitting a superquadric to a cloud with %ld points.\n", cloud_centered->size ());
-      sq::SuperquadricFittingLM<PointXYZ, double> sq_fit;
-      sq_fit.setInputCloud (cloud_centered);
-      sq::SuperquadricParameters<double> params;
-      double fit_error = sq_fit.fit (params);
-
-      PCL_INFO ("Superquadric fit error = %f\n", fit_error);
-
-      if (fit_error > cluster_sq_error)
-      {
-        PCL_INFO ("Splitting ...\n");
-        PointCloud<PointXYZ>::Ptr cluster_one (new PointCloud<PointXYZ> ());
-        PointCloud<PointXYZ>::Ptr cluster_two (new PointCloud<PointXYZ> ());
-        Eigen::Vector4d splitting_plane_params;
-        splitCluster (*cluster_it,
-                      *cluster_one, *cluster_two,
-                      splitting_plane_params);
-
-        clusters_processing_next_iteration.push_back (cluster_one);
-        clusters_processing_next_iteration.push_back (cluster_two);
-
-        splitting_planes.push_back (splitting_plane_params);
-      }
-      else
-        clusters_done.push_back (*cluster_it);
+      SuperquadricCluster cluster_done;
+      cluster_done.cloud = cloud_current;
+      clusters_result.push_back (cluster_done);
+      continue;
     }
 
-    clusters_processing = clusters_processing_next_iteration;
-    clusters_processing_next_iteration.clear ();
+    PCL_INFO ("Fitting a superquadric to a cloud with %ld points.\n", cloud_current->size ());
+    sq::SuperquadricParameters<double> params;
+    double fit_error = fitBestSuperquadric (cloud_current, params);
+
+    PCL_INFO ("Superquadric fit error = %f\n", fit_error);
+
+    if (fit_error > cluster_sq_error)
+    {
+      PCL_INFO ("Splitting ...\n");
+      PointCloud<PointXYZ>::Ptr cluster_one (new PointCloud<PointXYZ> ());
+      PointCloud<PointXYZ>::Ptr cluster_two (new PointCloud<PointXYZ> ());
+      Eigen::Vector4d splitting_plane_params;
+      splitCluster (cloud_current,
+                    *cluster_one, *cluster_two,
+                    splitting_plane_params);
+
+      cluster_queue.push_front (cluster_one);
+      cluster_queue.push_front (cluster_two);
+
+      splitting_planes.push_back (splitting_plane_params);
+    }
+    else
+    {
+      SuperquadricCluster cluster_done;
+      cluster_done.cloud = cloud_current;
+      cluster_done.params = params;
+      clusters_result.push_back (cluster_done);
+    }
   }
 
-  PCL_INFO ("Number of clusters after splitting: %ld\n   with sizes: ", clusters_done.size ());
-  for (size_t i = 0; i < clusters_done.size (); ++i)
-    PCL_INFO ("%ld ", clusters_done[i]->size ());
+  PCL_INFO ("Number of clusters after splitting: %ld\n   with sizes: ", clusters_result.size ());
+  for (size_t i = 0; i < clusters_result.size (); ++i)
+    PCL_INFO ("%ld ", clusters_result[i].cloud->size ());
   PCL_INFO ("\n");
-
-  clusters_result = clusters_done;
 }
 
 
 
 void
-mergeClusters (std::vector<PointCloud<PointXYZ>::Ptr> &clusters_in,
-               std::vector<PointCloud<PointXYZ>::Ptr> &clusters_merged,
+mergeClusters (std::vector<SuperquadricCluster> &clusters_in,
+               std::vector<SuperquadricCluster> &clusters_merged,
                std::vector<Eigen::Vector4d> &splitting_planes)
 {
   /// TODO would need to carry them over from the splitting step
@@ -127,7 +160,7 @@ mergeClusters (std::vector<PointCloud<PointXYZ>::Ptr> &clusters_in,
   for (size_t cluster_i = 0; cluster_i < clusters_in.size (); ++cluster_i)
   {
     Eigen::Vector4d centroid;
-    compute3DCentroid (*clusters_in[cluster_i], centroid);
+    compute3DCentroid (*clusters_in[cluster_i].cloud, centroid);
     centroids.push_back (Eigen::Vector3d (centroid[0], centroid[1], centroid[2]));
   }
 
@@ -164,7 +197,7 @@ mergeClusters (std::vector<PointCloud<PointXYZ>::Ptr> &clusters_in,
         {
           /// Compute the union of the clusters
           PointCloud<PointXYZ>::Ptr clusters_union (new PointCloud<PointXYZ> ());
-          *clusters_union = *(clusters_in[c_i]) + *(clusters_in[c_j]);
+          *clusters_union = *(clusters_in[c_i].cloud) + *(clusters_in[c_j].cloud);
 
           /// Center the cloud
           Eigen::Vector4d centroid;
@@ -173,7 +206,7 @@ mergeClusters (std::vector<PointCloud<PointXYZ>::Ptr> &clusters_in,
           demeanPointCloud (*clusters_union, centroid, *cloud_centered);
 
           /// Fit a superquadric in the union
-          sq::SuperquadricFittingLM<PointXYZ, double> sq_fit;
+          sq::SuperquadricFittingCeres<PointXYZ, double> sq_fit;
           sq_fit.setInputCloud (cloud_centered);
           sq::SuperquadricParameters<double> params;
           double fit_error = sq_fit.fit (params);
@@ -191,8 +224,8 @@ mergeClusters (std::vector<PointCloud<PointXYZ>::Ptr> &clusters_in,
     PCL_INFO ("Possible merges: ");
     for (size_t i = 0; i < possible_merges.size (); ++i)
       PCL_INFO ("(%ld (%ld points), %ld (%ld points) - %f)\n",
-                possible_merges[i].first, clusters_in[possible_merges[i].first]->size (),
-          possible_merges[i].second, clusters_in[possible_merges[i].second]->size (),
+                possible_merges[i].first, clusters_in[possible_merges[i].first].cloud->size (),
+                possible_merges[i].second, clusters_in[possible_merges[i].second].cloud->size (),
                 possible_errors[i]);
   }
 
@@ -204,17 +237,33 @@ int
 main (int argc,
       char **argv)
 {
+  google::InitGoogleLogging (argv[0]);
+
   PointCloud<PointXYZ>::Ptr cloud (new PointCloud<PointXYZ> ());
   io::loadPCDFile (argv[1], *cloud);
 
-  std::vector<PointCloud<PointXYZ>::Ptr> clusters_split;
+  PCL_INFO ("####### SPLITTING ######\n");
+
+  std::vector<SuperquadricCluster> clusters_split;
   std::vector<Eigen::Vector4d> splitting_planes;
   splitClusters (cloud, clusters_split, splitting_planes);
 
-  std::vector<PointCloud<PointXYZ>::Ptr> clusters_merge;
+  PCL_INFO ("Clusters after splitting:\n");
+  for (size_t i = 0; i < clusters_split.size (); ++i)
+  {
+    PCL_INFO ("Command for sampler:\n-e1 %f -e2 %f -a %f -b %f -c %f -transform %f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f\n",
+              clusters_split[i].params.e1, clusters_split[i].params.e2, clusters_split[i].params.a, clusters_split[i].params.b, clusters_split[i].params.c,
+              clusters_split[i].params.transform (0, 0), clusters_split[i].params.transform (0, 1), clusters_split[i].params.transform (0, 2), clusters_split[i].params.transform (0, 3),
+              clusters_split[i].params.transform (1, 0), clusters_split[i].params.transform (1, 1), clusters_split[i].params.transform (1, 2), clusters_split[i].params.transform (1, 3),
+              clusters_split[i].params.transform (2, 0), clusters_split[i].params.transform (2, 1), clusters_split[i].params.transform (2, 2), clusters_split[i].params.transform (2, 3),
+              clusters_split[i].params.transform (3, 0), clusters_split[i].params.transform (3, 1), clusters_split[i].params.transform (3, 2), clusters_split[i].params.transform (3, 3));
+    PCL_INFO ("\n");
+  }
+
+  PCL_INFO ("####### MERGING ######\n");
+
+  std::vector<SuperquadricCluster> clusters_merge;
   mergeClusters (clusters_split, clusters_merge, splitting_planes);
-
-
 
 
   return (0);

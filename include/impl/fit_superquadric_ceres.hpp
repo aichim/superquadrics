@@ -124,6 +124,13 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParameters<Mat
   ceres::Solver::Summary summary;
   ceres::Solve (options, &problem, &summary);
 
+  /// If we did not converge, return infinite error
+  if (summary.termination_type != ceres::FUNCTION_TOLERANCE)
+  {
+    PCL_ERROR ("Did not converge.\n");
+    return (std::numeric_limits<double>::infinity ());
+  }
+
   std::cout << summary.BriefReport () << std::endl;
 
   printf ("x = ");
