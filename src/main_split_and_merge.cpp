@@ -257,7 +257,7 @@ mergeClusters (const std::vector<SuperquadricCluster::Ptr> &clusters_in,
 
   clusters_merged = clusters_in;
 
-  /// Repeat until we cannot do any more morges
+  /// Repeat until we cannot do any more merges
   do
   {
     merge_count = 0;
@@ -280,15 +280,17 @@ mergeClusters (const std::vector<SuperquadricCluster::Ptr> &clusters_in,
       /// Center the cloud
       Eigen::Vector4d centroid;
       pcl::compute3DCentroid (*clusters_union, centroid);
-      PointCloud<PointXYZ>::Ptr cloud_centered (new PointCloud<PointXYZ> ());
-      demeanPointCloud (*clusters_union, centroid, *cloud_centered);
+//      PointCloud<PointXYZ>::Ptr cloud_centered (new PointCloud<PointXYZ> ());
+//      demeanPointCloud (*clusters_union, centroid, *cloud_centered);
 
 
       /// Fit a superquadric in the union
-      sq::SuperquadricFittingCeres<PointXYZ, double> sq_fit;
-      sq_fit.setInputCloud (cloud_centered);
       sq::SuperquadricParameters<double> params;
-      double fit_error = sq_fit.fit (params);
+      double fit_error = fitBestSuperquadric (clusters_union, params);
+//      sq::SuperquadricFittingCeres<PointXYZ, double> sq_fit;
+//      sq_fit.setInputCloud (cloud_centered);
+
+//      double fit_error = sq_fit.fit (params);
       PCL_INFO ("Superquadric fit error = %f\n", fit_error);
 
       if (fit_error < cluster_sq_error)
