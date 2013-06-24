@@ -9,7 +9,6 @@
 template <typename PointT, typename Scalar>
 sq::SuperquadricSampling<PointT, Scalar>::SuperquadricSampling ()
 {
-  transform_ = Eigen::Matrix<Scalar, 4, 4>::Identity ();
   eta_samples_ = 100;
   mu_samples_ = 100;
 }
@@ -32,7 +31,7 @@ sq::SuperquadricSampling<PointT, Scalar>::generatePointCloud (pcl::PointCloud<Po
       p[3] = 1.;
 
       PointT point;
-      Eigen::Matrix<Scalar, 4, 1> p_tr = transform_.inverse () * p;
+      Eigen::Matrix<Scalar, 4, 1> p_tr = params_.transform.inverse () * p;
       point.x = p_tr[0];
       point.y = p_tr[1];
       point.z = p_tr[2];

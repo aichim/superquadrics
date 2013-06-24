@@ -3,8 +3,8 @@
 
 #include "fit_superquadric_ceres.h"
 #include "superquadric_formulas.h"
+#include "sample_superquadric.h"
 
-#include <boost/geometry/geometry.hpp>
 
 using namespace pcl;
 
@@ -22,7 +22,6 @@ struct SuperquadricCluster
 
   SuperquadricCluster (const SuperquadricCluster& copy)
   {
-    PCL_ERROR ("my copy constructor called\n");
     if (copy.cloud)
     {
       cloud.reset (new PointCloud<PointXYZ> ());
@@ -280,17 +279,10 @@ mergeClusters (const std::vector<SuperquadricCluster::Ptr> &clusters_in,
       /// Center the cloud
       Eigen::Vector4d centroid;
       pcl::compute3DCentroid (*clusters_union, centroid);
-//      PointCloud<PointXYZ>::Ptr cloud_centered (new PointCloud<PointXYZ> ());
-//      demeanPointCloud (*clusters_union, centroid, *cloud_centered);
-
 
       /// Fit a superquadric in the union
       sq::SuperquadricParameters<double> params;
       double fit_error = fitBestSuperquadric (clusters_union, params);
-//      sq::SuperquadricFittingCeres<PointXYZ, double> sq_fit;
-//      sq_fit.setInputCloud (cloud_centered);
-
-//      double fit_error = sq_fit.fit (params);
       PCL_INFO ("Superquadric fit error = %f\n", fit_error);
 
       if (fit_error < cluster_sq_error)
@@ -410,6 +402,21 @@ main (int argc,
               clusters_merge[i]->params.transform (2, 0), clusters_merge[i]->params.transform (2, 1), clusters_merge[i]->params.transform (2, 2), clusters_merge[i]->params.transform (2, 3),
               clusters_merge[i]->params.transform (3, 0), clusters_merge[i]->params.transform (3, 1), clusters_merge[i]->params.transform (3, 2), clusters_merge[i]->params.transform (3, 3));
     PCL_INFO ("\n");
+  }
+
+
+  /// Generate the cluster point clouds for easy result visualization
+  for (size_t i = 0; i < clusters_merge.size (); ++i)
+  {
+    sq::SuperquadricSampling<PointXYZ, double> sampling;
+    sampling.setParameters (clusters_merge[i]->params);
+
+    PointCloud<PointXYZ> cluster_cloud;
+    sampling.generatePointCloud (cluster_cloud);
+
+    char str[512];
+    sprintf (str, "cluster_%zu.pcd", i);
+    io::savePCDFileBinaryCompressed (str, cluster_cloud);
   }
 
 

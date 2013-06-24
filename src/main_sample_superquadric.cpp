@@ -86,9 +86,9 @@ main (int argc,
   params.a = a;
   params.b = b;
   params.c = c;
+  params.transform = transformation;
 
   sampling.setParameters (params);
-  sampling.setTransformation (transformation);
 
 
   /// Sample the superquadric to a pcd file

@@ -25,10 +25,6 @@ namespace sq
     { params_ = params; }
 
     inline void
-    setTransformation (const Eigen::Matrix<Scalar, 4, 4> &transform)
-    { transform_ = transform; }
-
-    inline void
     setSampleCount (const int eta_samples,
                     const int mu_samples)
     { eta_samples_ = eta_samples;
@@ -44,7 +40,6 @@ namespace sq
 
   protected:
     SuperquadricParameters<Scalar> params_;
-    Eigen::Matrix<Scalar, 4, 4> transform_;
     int eta_samples_;
     int mu_samples_;
   };
