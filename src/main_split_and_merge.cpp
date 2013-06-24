@@ -1,5 +1,6 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/common/pca.h>
+#include <pcl/io/vtk_lib_io.h>
 
 #include "fit_superquadric_ceres.h"
 #include "superquadric_formulas.h"
@@ -417,6 +418,11 @@ main (int argc,
     char str[512];
     sprintf (str, "cluster_%zu.pcd", i);
     io::savePCDFileBinaryCompressed (str, cluster_cloud);
+
+    PolygonMesh cluster_mesh;
+    sampling.generateMesh (cluster_mesh);
+    sprintf (str, "cluster_%zu.vtk", i);
+    io::savePolygonFileVTK (str, cluster_mesh);
   }
 
 
