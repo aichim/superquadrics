@@ -1,13 +1,8 @@
 #pragma once
 
 
-namespace pcl
-{
-template<typename PointT>
-class PointCloud;
+#include "sample_superquadric.h"
 
-class PolygonMesh;
-}
 
 namespace sq
 {
@@ -15,24 +10,21 @@ namespace sq
   struct SuperquadricParameters;
 
   /**
-   * Naive superquadric sampling (i.e., uniformly sample the parameter space)
+   * Smart superquadric sampling, should result in almost uniform sampling in 3D space
    */
   template <typename PointT, typename Scalar>
-  class SuperquadricSampling
+  class SuperquadricSamplingUniform
   {
   public:
-    SuperquadricSampling ();
+    SuperquadricSamplingUniform ();
 
     inline void
     setParameters (const SuperquadricParameters<Scalar> &params)
     { params_ = params; }
 
     inline void
-    setSampleCount (const int eta_samples,
-                    const int mu_samples)
-    { eta_samples_ = eta_samples;
-      mu_samples_ = mu_samples; }
-
+    setSpatialSampling (const double D)
+    { D_ = D; }
 
     void
     generatePointCloud (pcl::PointCloud<PointT> &cloud);
@@ -40,13 +32,18 @@ namespace sq
     void
     generateMesh (pcl::PolygonMesh &mesh);
 
+    double
+    updateTheta (const double a1,
+                 const double a2,
+                 const double eps,
+                 const double theta);
+
 
   protected:
     SuperquadricParameters<Scalar> params_;
-    int eta_samples_;
-    int mu_samples_;
+    double D_;
   };
 }
 
 
-#include "impl/sample_superquadric.hpp"
+#include "impl/sample_superquadric_uniform.hpp"

@@ -8,6 +8,7 @@
 #include <boost/algorithm/string.hpp>
 
 #include "sample_superquadric.h"
+#include "sample_superquadric_uniform.h"
 #include "superquadric_formulas.h"
 
 using namespace pcl;
@@ -116,6 +117,16 @@ main (int argc,
     PCL_ERROR ("Unknown file format, use .pcd or .obj\n");
     return (-1);
   }
+
+
+
+
+  /// Generate superquadric with the new smart sampling scheme
+  sq::SuperquadricSamplingUniform<PointXYZ, double> sampling_uniform;
+  sampling_uniform.setParameters (params);
+  PointCloud<PointXYZ> cloud_uniform;
+  sampling_uniform.generatePointCloud (cloud_uniform);
+  io::savePCDFile ("uniform.pcd", cloud_uniform, true);
 
 
 

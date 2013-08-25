@@ -20,14 +20,17 @@ endif()
 set (framework_incs include/fit_superquadric_lm.h 
 					include/fit_superquadric_ceres.h
                     include/superquadric_formulas.h
-                    include/sample_superquadric.h)
+                    include/sample_superquadric.h
+                    include/sample_superquadric_uniform.h)
 set (framework_impls include/impl/fit_superquadric_lm.hpp
 					 include/impl/fit_superquadric_ceres.hpp
 					 include/impl/superquadric_formulas.hpp
-                     include/impl/sample_superquadric.hpp)
+                     include/impl/sample_superquadric.hpp
+                     include/impl/sample_superquadric_uniform.hpp)
 set (framework_srcs src/fit_superquadric_lm.cpp
                     src/fit_superquadric_ceres.cpp
-                    src/sample_superquadric.cpp)
+                    src/sample_superquadric.cpp
+                    src/sample_superquadric_uniform.cpp)
 
 ADD_LIBRARY (superquadrics_framework ${framework_incs} ${framework_impls} ${framework_srcs})
 TARGET_LINK_LIBRARIES (superquadrics_framework)
