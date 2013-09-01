@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(superquadrics_visualize)
 
-find_package(PCL 1.7 REQUIRED io common visualization)
+find_package(PCL 1.7 REQUIRED io common segmentation sample_consensus surface visualization)
 include_directories(${PCL_INCLUDE_DIRS} include/)
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
@@ -21,16 +21,19 @@ set (framework_incs include/fit_superquadric_lm.h
 					include/fit_superquadric_ceres.h
                     include/superquadric_formulas.h
                     include/sample_superquadric.h
-                    include/sample_superquadric_uniform.h)
+                    include/sample_superquadric_uniform.h
+                    include/segmentation_utils.h)
 set (framework_impls include/impl/fit_superquadric_lm.hpp
 					 include/impl/fit_superquadric_ceres.hpp
 					 include/impl/superquadric_formulas.hpp
                      include/impl/sample_superquadric.hpp
-                     include/impl/sample_superquadric_uniform.hpp)
+                     include/impl/sample_superquadric_uniform.hpp
+                     include/impl/segmentation_utils.hpp)
 set (framework_srcs src/fit_superquadric_lm.cpp
                     src/fit_superquadric_ceres.cpp
                     src/sample_superquadric.cpp
-                    src/sample_superquadric_uniform.cpp)
+                    src/sample_superquadric_uniform.cpp
+                    src/segmentation_utils.cpp)
 
 ADD_LIBRARY (superquadrics_framework ${framework_incs} ${framework_impls} ${framework_srcs})
 TARGET_LINK_LIBRARIES (superquadrics_framework)
@@ -57,3 +60,7 @@ target_link_libraries (fit_superquadric_ceres ${libs_to_link})
 
 add_executable (ceres_test MACOSX_BUNDLE src/main_ceres_test.cpp)
 target_link_libraries (ceres_test ${libs_to_link})
+
+
+add_executable (tabletop_segmentation MACOSX_BUNDLE src/main_tabletop_segmentation.cpp)
+target_link_libraries (tabletop_segmentation ${libs_to_link})
