@@ -114,5 +114,5 @@ sq::SuperquadricSampling<PointT, Scalar>::generateMesh (pcl::PolygonMesh &mesh)
   polygon.vertices.push_back (0);
   mesh.polygons.push_back (polygon);
 */
-  toROSMsg (cloud, mesh.cloud);
+  toPCLPointCloud2 (cloud, mesh.cloud);
 }
