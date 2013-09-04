@@ -22,18 +22,21 @@ set (framework_incs include/fit_superquadric_lm.h
                     include/superquadric_formulas.h
                     include/sample_superquadric.h
                     include/sample_superquadric_uniform.h
-                    include/segmentation_utils.h)
+                    include/segmentation_utils.h
+                    include/tabletop_segmentation.h)
 set (framework_impls include/impl/fit_superquadric_lm.hpp
 					 include/impl/fit_superquadric_ceres.hpp
 					 include/impl/superquadric_formulas.hpp
                      include/impl/sample_superquadric.hpp
                      include/impl/sample_superquadric_uniform.hpp
-                     include/impl/segmentation_utils.hpp)
+                     include/impl/segmentation_utils.hpp
+                     include/impl/tabletop_segmentation.hpp)
 set (framework_srcs src/fit_superquadric_lm.cpp
                     src/fit_superquadric_ceres.cpp
                     src/sample_superquadric.cpp
                     src/sample_superquadric_uniform.cpp
-                    src/segmentation_utils.cpp)
+                    src/segmentation_utils.cpp
+                    src/tabletop_segmentation.cpp)
 
 ADD_LIBRARY (superquadrics_framework ${framework_incs} ${framework_impls} ${framework_srcs})
 TARGET_LINK_LIBRARIES (superquadrics_framework)
@@ -64,3 +67,6 @@ target_link_libraries (ceres_test ${libs_to_link})
 
 add_executable (tabletop_segmentation MACOSX_BUNDLE src/main_tabletop_segmentation.cpp)
 target_link_libraries (tabletop_segmentation ${libs_to_link})
+
+add_executable (segmentation_n_fitting_pipeline MACOSX_BUNDLE src/main_segmentation_n_fitting_pipeline.cpp)
+target_link_libraries (segmentation_n_fitting_pipeline ${libs_to_link})
