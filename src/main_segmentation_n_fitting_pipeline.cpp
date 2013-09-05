@@ -57,8 +57,7 @@ main (int argc,
   visualizer.spin ();
 
 
-//  for (size_t c_i = 0; c_i < cloud_clusters.size (); ++c_i)
-  size_t c_i = 2;
+  for (size_t c_i = 0; c_i < cloud_clusters.size (); ++c_i)
   {
     double min_fit = std::numeric_limits<double>::max ();
     sq::SuperquadricParameters<double> min_params;
