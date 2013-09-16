@@ -8,7 +8,7 @@
 template<typename PointT, typename Scalar>
 sq::SuperquadricDetection<PointT, Scalar>::SuperquadricDetection ()
   : ransac_starts_ (10)
-  , ransac_hypotheses_ (50) //(12)
+  , ransac_hypotheses_ (10) //(12)
   , ransac_model_points_ (30)
   , gamma_ (0.2)
 {
@@ -66,19 +66,20 @@ sq::SuperquadricDetection<PointT, Scalar>::process (typename std::vector<Superqu
       /// Fit a superquadric
       SuperquadricRigidRegistration<PointT, Scalar> sq_reg;
       sq_reg.setInputCloud (cloud);
-      Eigen::Matrix4d transf_init = Eigen::Matrix4d::Identity ();
-      transf_init (0, 3) = (*cloud_input_)[seed_index].x;
-      transf_init (1, 3) = (*cloud_input_)[seed_index].y;
-      transf_init (2, 3) = (*cloud_input_)[seed_index].z;
-      sq_reg.setInitTransform (transf_init);
       sq_reg.setParameters (superquadric_params_.e1, superquadric_params_.e2, superquadric_params_.a, superquadric_params_.b, superquadric_params_.c);
-      Eigen::Matrix<Scalar, 4, 4> transf;
-      double fitting_error = sq_reg.fit (transf);
 
-      if (fitting_error < min_fit_error)
+      for (int i = 0; i < 3; ++i)
       {
-        min_fit_error = fitting_error;
-        min_transf = transf;
+        sq_reg.setPreAlign (true, i);
+        Eigen::Matrix4d transf;
+        double fit = sq_reg.fit (transf);
+        printf ("pre_align axis %d, fit %f\n", i, fit);
+
+        if (fit < min_fit_error)
+        {
+          min_fit_error = fit;
+          min_transf = transf;
+        }
       }
     }
 

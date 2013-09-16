@@ -67,10 +67,6 @@ target_link_libraries (split_and_merge ${libs_to_link})
 add_executable (fit_superquadric_ceres src/main_fit_superquadric_ceres.cpp)
 target_link_libraries (fit_superquadric_ceres ${libs_to_link})
 
-add_executable (ceres_test MACOSX_BUNDLE src/main_ceres_test.cpp)
-target_link_libraries (ceres_test ${libs_to_link})
-
-
 add_executable (tabletop_segmentation MACOSX_BUNDLE src/main_tabletop_segmentation.cpp)
 target_link_libraries (tabletop_segmentation ${libs_to_link})
 
@@ -79,3 +75,7 @@ target_link_libraries (segmentation_n_fitting_pipeline ${libs_to_link})
 
 add_executable (segmentation_n_detection MACOSX_BUNDLE src/main_segmentation_n_detection.cpp)
 target_link_libraries (segmentation_n_detection ${libs_to_link})
+
+
+add_executable (tests src/main_tests.cpp)
+target_link_libraries (tests ${libs_to_link})

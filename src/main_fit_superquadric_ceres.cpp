@@ -41,7 +41,5 @@ main (int argc,
             min_params.transform (2, 0), min_params.transform (2, 1), min_params.transform (2, 2), min_params.transform (2, 3),
             min_params.transform (3, 0), min_params.transform (3, 1), min_params.transform (3, 2), min_params.transform (3, 3));
 
-
-
   return (true);
 }

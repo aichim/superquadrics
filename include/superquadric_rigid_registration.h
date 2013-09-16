@@ -36,6 +36,18 @@ public:
   setInitTransform (Eigen::Matrix<MatScalar, 4, 4> &tr)
   { init_transform_ = tr; }
 
+  void
+  setPreAlign (bool pre_align,
+               int pre_align_axis = 2)
+  {
+    pre_align_ = pre_align;
+    pre_align_axis_ = pre_align_axis;
+  }
+
+  void
+  preAlign (Eigen::Matrix<MatScalar, 4, 4> &transformation_prealign);
+
+
   double
   fit (Eigen::Matrix<MatScalar, 4, 4> &transform);
 
@@ -63,6 +75,9 @@ protected:
 
   MatScalar e1_, e2_, a_, b_, c_;
   Eigen::Matrix<MatScalar, 4, 4> init_transform_;
+
+  bool pre_align_;
+  int pre_align_axis_;
 };
 }
 
