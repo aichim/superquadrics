@@ -33,6 +33,10 @@ public:
   setInputCloud (const CloudConstPtr &cloud)
   { input_ = cloud; }
 
+  void
+  setInitParameters (SuperquadricParameters<MatScalar> &init_params)
+  { init_parameters_ = init_params; }
+
 //  void
 //  setIndices (const pcl::IndicesConstPtr &indices)
 //  { indices_ = indices; }
@@ -62,6 +66,8 @@ public:
 protected:
   CloudConstPtr input_;
   CloudPtr input_prealigned_;
+
+  SuperquadricParameters<MatScalar> init_parameters_;
 
   bool pre_align_;
   int pre_align_axis_;

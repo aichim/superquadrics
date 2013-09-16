@@ -40,6 +40,7 @@ main (int argc,
   tabletop_segmentation.getObjectClusters (cloud_clusters);
 
   visualization::PCLVisualizer visualizer;
+  visualizer.setBackgroundColor (255., 255., 255.);
 
   for (size_t c_i = 0; c_i < cloud_clusters.size (); ++c_i)
   {
@@ -89,6 +90,9 @@ main (int argc,
     char str[512];
     sprintf (str, "cluster_fitted_mesh_%03zu", c_i);
     visualizer.addPolygonMesh (mesh, str);
+
+    PCL_INFO ("--- Displaying superquadric with error: %f and params: -e1 %f -e2 %f -a %f -b %f -c %f\n",
+              min_fit, min_params.e1, min_params.e2, min_params.a, min_params.b, min_params.c);
 
 //    PointCloud<PointXYZ>::Ptr cloud_fitted (new PointCloud<PointXYZ> ());
 //    sampling.generatePointCloud (*cloud_fitted);

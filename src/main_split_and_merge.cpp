@@ -9,8 +9,8 @@
 
 using namespace pcl;
 
-const double cluster_sq_error = 6000.;
-const size_t min_cluster_points_ = 20;
+const double cluster_sq_error = 10.;
+const size_t min_cluster_points_ = 500;
 
 
 struct SuperquadricCluster

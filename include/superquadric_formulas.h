@@ -28,6 +28,17 @@ superquadric_function (const Scalar &x,
                        const Scalar &b,
                        const Scalar &c);
 
+template <typename Scalar> inline Scalar
+superquadric_function_scale_weighting (const Scalar &x,
+                                       const Scalar &y,
+                                       const Scalar &z,
+                                       const Scalar &e1,
+                                       const Scalar &e2,
+                                       const Scalar &a,
+                                       const Scalar &b,
+                                       const Scalar &c);
+
+
 /** Computed with Maple, used for the Eigen LM, Ceres uses Automatic Differentiation*/
 template<typename Scalar> inline void
 superquadric_derivative (const Scalar &x, const Scalar &y, const Scalar &z,

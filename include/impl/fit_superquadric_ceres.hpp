@@ -15,7 +15,12 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::SuperquadricFittingCeres ()
   : pre_align_ (true)
   , pre_align_axis_ (2)
 {
-
+  init_parameters_.a = 1.;
+  init_parameters_.b = 1.;
+  init_parameters_.c = 1.;
+  init_parameters_.e1 = 1.;
+  init_parameters_.e2 = 1.;
+  init_parameters_.transform = Eigen::Matrix4d::Identity ();
 }
 
 
@@ -145,28 +150,9 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParameters<Mat
   transformation (1, 3) = xvec[6];
   transformation (2, 3) = xvec[7];
   transformation (3, 3) = 1.;
-
-  double angle_x = xvec[8],
-      angle_y = xvec[9],
-      angle_z = xvec[10];
-  double aux_a = cos (angle_x),
-      aux_b = sin (angle_x),
-      aux_c = cos (angle_y),
-      aux_d = sin (angle_y),
-      aux_e = cos (angle_z),
-      aux_f = sin (angle_z),
-      aux_ad = aux_a * aux_d,
-      aux_bd = aux_b * aux_d;
-
-  transformation (0, 0) = aux_c * aux_e;
-  transformation (0, 1) = -aux_c * aux_f;
-  transformation (0, 2) = -aux_d;
-  transformation (1, 0) = -aux_bd * aux_e + aux_a * aux_f;
-  transformation (1, 1) = aux_bd * aux_f + aux_a * aux_e;
-  transformation (1, 2) = -aux_b * aux_c;
-  transformation (2, 0) = aux_ad * aux_e + aux_b * aux_f;
-  transformation (2, 1) = -aux_ad * aux_f + aux_b * aux_e;
-  transformation (2, 2) = aux_a * aux_c;
+  transformation.block (0, 0, 3, 3) = Eigen::AngleAxis<MatScalar> (xvec[8], Eigen::Matrix<MatScalar, 3, 1>::UnitZ ()) *
+                                      Eigen::AngleAxis<MatScalar> (xvec[9], Eigen::Matrix<MatScalar, 3, 1>::UnitX ()) *
+                                      Eigen::AngleAxis<MatScalar> (xvec[10], Eigen::Matrix<MatScalar, 3, 1>::UnitZ ()).matrix ();
 
 
 
@@ -202,34 +188,15 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::SuperquadricCostFunctor::operat
   transformation (1, 3) = xvec[6];
   transformation (2, 3) = xvec[7];
   transformation (3, 3) = T (1.);
-
-  T angle_x = xvec[8],
-      angle_y = xvec[9],
-      angle_z = xvec[10];
-  T aux_a = cos (angle_x),
-      aux_b = sin (angle_x),
-      aux_c = cos (angle_y),
-      aux_d = sin (angle_y),
-      aux_e = cos (angle_z),
-      aux_f = sin (angle_z),
-      aux_ad = aux_a * aux_d,
-      aux_bd = aux_b * aux_d;
-
-  transformation (0, 0) = aux_c * aux_e;
-  transformation (0, 1) = -aux_c * aux_f;
-  transformation (0, 2) = -aux_d;
-  transformation (1, 0) = -aux_bd * aux_e + aux_a * aux_f;
-  transformation (1, 1) = aux_bd * aux_f + aux_a * aux_e;
-  transformation (1, 2) = -aux_b * aux_c;
-  transformation (2, 0) = aux_ad * aux_e + aux_b * aux_f;
-  transformation (2, 1) = -aux_ad * aux_f + aux_b * aux_e;
-  transformation (2, 2) = aux_a * aux_c;
+  transformation.block (0, 0, 3, 3) = Eigen::AngleAxis<T> (xvec[8], Eigen::Matrix<T, 3, 1>::UnitZ ()) *
+                                      Eigen::AngleAxis<T> (xvec[9], Eigen::Matrix<T, 3, 1>::UnitX ()) *
+                                      Eigen::AngleAxis<T> (xvec[10], Eigen::Matrix<T, 3, 1>::UnitZ ()).matrix ();
 
   Eigen::Matrix<T, 4, 1> xyz (T (point_.x), T (point_.y), T (point_.z), T (1.));
   Eigen::Matrix<T, 4, 1> xyz_tr = transformation * xyz;
   T op = Eigen::Matrix<T, 3, 1> (xyz_tr[0], xyz_tr[1], xyz_tr[2]).norm ();
 
-  residual[0] = op *superquadric_function<T> (xyz_tr[0], xyz_tr[1], xyz_tr[2], e1, e2, a, b, c);
+  residual[0] = /*op */superquadric_function_scale_weighting<T> (xyz_tr[0], xyz_tr[1], xyz_tr[2], e1, e2, a, b, c);
 
 
   return (true);

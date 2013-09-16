@@ -17,6 +17,23 @@ sq::superquadric_function (const Scalar &x, const Scalar &y, const Scalar &z,
   Scalar term_3 = pow (ceres::abs (z / c), Scalar (2.) / e1);
   Scalar superellipsoid_f = pow (ceres::abs (term_1 + term_2), e2 / e1) + term_3;
 
+  Scalar value = (pow (superellipsoid_f, e1) - Scalar (1.));
+
+  return (value);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+template <typename Scalar> inline Scalar
+sq::superquadric_function_scale_weighting (const Scalar &x, const Scalar &y, const Scalar &z,
+                                           const Scalar &e1, const Scalar &e2,
+                                           const Scalar &a, const Scalar &b, const Scalar &c)
+{
+  Scalar term_1 = pow (ceres::abs (x / a), Scalar (2.) / e2);
+  Scalar term_2 = pow (ceres::abs (y / b), Scalar (2.) / e2);
+  Scalar term_3 = pow (ceres::abs (z / c), Scalar (2.) / e1);
+  Scalar superellipsoid_f = pow (ceres::abs (term_1 + term_2), e2 / e1) + term_3;
+
   Scalar value = (pow (superellipsoid_f, e1 / Scalar (2.)) - Scalar (1.)) * pow (a*b*c, Scalar (0.25));
 
   return (value);
