@@ -8,7 +8,7 @@
 template<typename PointT, typename Scalar>
 sq::SuperquadricDetection<PointT, Scalar>::SuperquadricDetection ()
   : ransac_starts_ (10)
-  , ransac_hypotheses_ (10) //(12)
+  , ransac_hypotheses_ (20) //(12)
   , ransac_model_points_ (30)
   , gamma_ (0.2)
 {
@@ -92,6 +92,7 @@ sq::SuperquadricDetection<PointT, Scalar>::process (typename std::vector<Superqu
 
     SuperquadricRigidRegistration<PointT, Scalar> sq_reg;
     sq_reg.setInputCloud (cloud);
+    sq_reg.setPreAlign (false);
     sq_reg.setParameters (superquadric_params_.e1, superquadric_params_.e2, superquadric_params_.a, superquadric_params_.b, superquadric_params_.c);
     sq_reg.setInitTransform (min_transf);
     Eigen::Matrix<Scalar, 4, 4> transf;

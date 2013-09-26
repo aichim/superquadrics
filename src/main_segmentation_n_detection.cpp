@@ -67,8 +67,6 @@ main (int argc,
   PCL_INFO ("Tabletop clustering done, press 'q' to detect superquadrics\n");
   visualizer.spin ();
 
-
-  /// TODO do it for each cluster separately
   for (size_t c_i = 0; c_i < cloud_clusters.size (); ++c_i)
   {
     sq::SuperquadricDetection<PointXYZ, double> detection;
@@ -77,6 +75,32 @@ main (int argc,
     std::vector<sq::SuperquadricDetection<PointXYZ, double>::SuperquadricDetectionHypothesis> hypotheses;
     detection.process (hypotheses);
 
+    /// TODO need to sort the hypotheses
+    /// Could just hack it and take the best fitting error instead
+
+    double min_fit_error = std::numeric_limits<double>::max ();
+    size_t min_fit_error_i = 0;
+    for (size_t h_i = 0; h_i < hypotheses.size (); ++h_i)
+    {
+      if (min_fit_error > hypotheses[h_i].fit_error)
+      {
+        min_fit_error = hypotheses[h_i].fit_error;
+        min_fit_error_i = h_i;
+      }
+    }
+
+    sq::SuperquadricSampling<PointXYZ, double> sampling;
+    sq::SuperquadricParameters<double> params = params_to_detect;
+    params.transform = hypotheses[min_fit_error_i].transform;
+    sampling.setParameters (params);
+
+    PolygonMesh mesh;
+    sampling.generateMesh (mesh);
+    char str[512];
+    sprintf (str, "hypothesis%03zu", c_i);
+    visualizer.addPolygonMesh (mesh, str);
+
+    /*
     for (size_t h_i = 0; h_i < hypotheses.size (); ++h_i)
     {
       sq::SuperquadricSampling<PointXYZ, double> sampling;
@@ -89,7 +113,7 @@ main (int argc,
       char str[512];
       sprintf (str, "hypothesis%03zu%03zu", c_i, h_i);
       visualizer.addPolygonMesh (mesh, str);
-    }
+    }*/
 
     visualizer.spin ();
   }
