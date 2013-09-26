@@ -22,7 +22,6 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::SuperquadricRigidRegistrat
 ////////////////////////////////////////////////////////////////////////////////
 template<typename PointT, typename MatScalar> void
 sq::SuperquadricRigidRegistration<PointT, MatScalar>::preAlign (Eigen::Matrix<MatScalar, 4, 4> &transformation_prealign)
-
 {
   /// Compute the centroid
   Eigen::Vector4d centroid;
@@ -44,9 +43,9 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::preAlign (Eigen::Matrix<Ma
   std::cout << "eigenvectors:\n" << eigenvectors << std::endl;
 
   /// Align the first PCA axis with the prealign axis
-  Eigen::Vector3f vec_aux = eigenvectors.col (0);
-  eigenvectors.col (0) = eigenvectors.col (pre_align_axis_);
-  eigenvectors.col (pre_align_axis_) = vec_aux;
+  Eigen::Vector3f vec_aux = eigenvectors.row (0);
+  eigenvectors.row (0) = eigenvectors.row (pre_align_axis_);
+  eigenvectors.row (pre_align_axis_) = vec_aux;
 
   float aux_ev = eigenvalues (0);
   eigenvalues (0) = eigenvalues (pre_align_axis_);
@@ -76,8 +75,6 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::preAlign (Eigen::Matrix<Ma
 template<typename PointT, typename MatScalar> double
 sq::SuperquadricRigidRegistration<PointT, MatScalar>::fit (Eigen::Matrix<MatScalar, 4, 4> &transform)
 {
-  ceres::Problem problem;
-
   Eigen::Matrix<MatScalar, 4, 4> init_transform_inverse;
 
   if (pre_align_)
@@ -100,6 +97,14 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::fit (Eigen::Matrix<MatScal
   xvec[4] = euler_angles (1, 0);
   xvec[5] = euler_angles (2, 0);
 
+
+  printf ("xvec before = ");
+  for (size_t i = 0; i < 6; ++i)
+    printf ("%f ", xvec[i]);
+  printf ("\n");
+
+
+  ceres::Problem problem;
   for (size_t p_i = 0; p_i < input_->size (); ++p_i)
   {
     const PointT &point = (*input_)[p_i];
@@ -108,9 +113,10 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::fit (Eigen::Matrix<MatScal
   }
 
   ceres::Solver::Options options;
+  options.max_num_iterations = 50;
   options.minimizer_type = ceres::TRUST_REGION;
   options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-//  options.minimizer_progress_to_stdout = true;
+  options.minimizer_progress_to_stdout = true;
   options.num_threads = 8;
 
 
@@ -118,15 +124,18 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::fit (Eigen::Matrix<MatScal
   ceres::Solve (options, &problem, &summary);
 
   /// If we did not converge, return infinite error
-  if (summary.termination_type == ceres::NO_CONVERGENCE ||
+  if (//summary.termination_type == ceres::NO_CONVERGENCE ||
       summary.termination_type == ceres::NUMERICAL_FAILURE ||
       summary.termination_type == ceres::DID_NOT_RUN)
   {
     PCL_ERROR ("Did not converge.\n");
+    std::cout << summary.FullReport () << std::endl;
+    transform = init_transform_inverse;
     return (std::numeric_limits<double>::infinity ());
   }
 
   std::cout << summary.BriefReport () << std::endl;
+
 
   printf ("x = ");
   for (size_t i = 0; i < 6; ++i)
@@ -157,6 +166,7 @@ template <typename PointT, typename MatScalar>
 template <typename T> bool
 sq::SuperquadricRigidRegistration<PointT, MatScalar>::SuperquadricCostFunctor::operator () (const T* const xvec, T* residual) const
 {
+//  PCL_ERROR ("Cost functor called\n");
   Eigen::Matrix<T, 4, 4> transformation;
   transformation.setZero ();
   transformation (0, 3) = xvec[0];
@@ -171,7 +181,15 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::SuperquadricCostFunctor::o
   Eigen::Matrix<T, 4, 1> xyz (T (point_.x), T (point_.y), T (point_.z), T (1.));
   Eigen::Matrix<T, 4, 1> xyz_tr = transformation * xyz;
 
+//  std::cout << "xyz_tr: " << xyz_tr[0] << " " << xyz_tr[1] << " " << xyz_tr[2] << std::endl;
+
   residual[0] = superquadric_function<T> (xyz_tr[0], xyz_tr[1], xyz_tr[2], T (e1_), T (e2_), T (a_), T (b_), T (c_));
+
+
+  /// TODO do something if the residual is inf, set it to something large 1e20 or so
+  //  if (residual[0])
+
+//  std::cout << residual[0] << std::endl;
 
 
   return (true);

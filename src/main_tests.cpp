@@ -92,6 +92,8 @@ main (int argc,
 
   double min_fit = std::numeric_limits<double>::max ();
   Eigen::Matrix4d min_transf;
+
+  /// TODO 0 - 3
   for (int i = 0; i < 3; ++i)
   {
     sq_reg.setPreAlign (true, i);
@@ -104,6 +106,13 @@ main (int argc,
       min_fit = fit;
       min_transf = transf;
     }
+
+
+    PointCloud<PointXYZ>::Ptr cloud_tr (new PointCloud<PointXYZ> ());
+    transformPointCloud (*cloud_input, *cloud_tr, transf);
+    char str[512];
+    sprintf (str, "cloud_trial_%d.pcd", i);
+    io::savePCDFileBinaryCompressed (str, *cloud_tr);
   }
 
 

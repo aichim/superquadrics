@@ -18,6 +18,9 @@ struct SuperquadricParameters
 };
 
 
+template <typename Scalar> inline void
+clampParameters (Scalar &e1_clamped, Scalar &e2_clamped);
+
 template <typename Scalar> inline Scalar
 superquadric_function (const Scalar &x,
                        const Scalar &y,

@@ -49,9 +49,9 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::preAlign (Eigen::Matrix<MatScal
   std::cout << "eigenvectors:\n" << eigenvectors << std::endl;
 
   /// Align the first PCA axis with the prealign axis
-  Eigen::Vector3f vec_aux = eigenvectors.col (0);
-  eigenvectors.col (0) = eigenvectors.col (pre_align_axis_);
-  eigenvectors.col (pre_align_axis_) = vec_aux;
+  Eigen::Vector3f vec_aux = eigenvectors.row (0);
+  eigenvectors.row (0) = eigenvectors.row (pre_align_axis_);
+  eigenvectors.row (pre_align_axis_) = vec_aux;
 
   float aux_ev = eigenvalues (0);
   eigenvalues (0) = eigenvalues (pre_align_axis_);
@@ -157,6 +157,7 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParameters<Mat
                                       Eigen::AngleAxis<MatScalar> (xvec[10], Eigen::Matrix<MatScalar, 3, 1>::UnitZ ()).matrix ();
 
 
+  clampParameters (xvec[0], xvec[1]);
 
   parameters.e1 = xvec[0];
   parameters.e2 = xvec[1];
@@ -167,7 +168,7 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParameters<Mat
 
   MatScalar final_error = computeSuperQuadricError<PointT, MatScalar> (input_,
                                                                        xvec[0], xvec[1], xvec[2], xvec[3], xvec[4],
-      transformation);
+                                                                       transformation);
 
 
   return (final_error);
