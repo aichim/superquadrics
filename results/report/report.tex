@@ -1,0 +1,120 @@
+\documentclass{article}
+\usepackage{fullpage}
+\usepackage{graphicx,xcolor}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+%\large
+\sffamily
+
+
+\null\vspace{2cm}
+{\huge PCL Toyota Code Sprint 2.0 - Superquadrics} \\[24pt] 
+\textcolor{gray}{{\\ Alexandru - Eugen Ichim}}
+    
+\vfill
+
+\begin{tabular} {cc}
+\hspace{1cm}
+\parbox{0.4\textwidth}{\includegraphics[width=6cm]{figures/logos}}
+\hspace{4cm}
+&
+\parbox{0.7\textwidth}{%
+	Open Perception Inc. \\ \\ \\
+%
+\small
+Supervised by:\\[4pt]
+%
+    Dr. Joseph Djugash\\
+    Dr. Radu B. Rusu\\[12pt]
+%
+2013}
+\end{tabular}
+\end{center}
+\vspace{2cm}
+\end{titlepage}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+\newpage
+
+\section {Introduction}
+
+\subsection {Code Sprint}
+explain what the code sprint is, second toyota code sprint for PCL, first one was MLS (reference it)
+
+
+\subsection {Superquadrics}
+superquadrics history - computer graphics, computer vision
+
+formulas
+
+drawings
+
+numerical issues
+
+\subsection {Datasets}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section {Sampling}
+
+\subsection {VTK}
+
+\subsection {Explicit}
+
+\subsection {Smart}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section {Fitting}
+
+Various error functions with paper references
+
+solvers: Eigen LM unstable, CERES
+
+Derivatives - explicit (from Maple - in superquadric\_formulas.h), numerical differentiation, autodiff from CERES with Jet types + explain what Jet is
+
+Initialisation from PCA
+
+\subsection {Multipart Fitting with a Split \& Merge Approach}
+
+explain what it is, reference paper
+
+results
+
+
+\section {Rigid Registration}
+
+
+
+\section {Detection}
+
+reference paper, explain how it works roughly
+
+
+\section {Tabletop Demo}
+
+kinfu, kinect, figures
+
+how I do the segmentation + clustering
+
+
+\section {Future Work}
+
+check Google doc
+
+implement everything in PCL
+
+tutorial on the website
+
+
+
+\end{document}
