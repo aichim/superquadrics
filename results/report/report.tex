@@ -13,7 +13,7 @@
 
 
 \null\vspace{2cm}
-{\huge PCL Toyota Code Sprint 2.0 - Superquadrics} \\[24pt] 
+{\huge PCL Toyota Code Sprint 2.0 - Superquadrics} \\[24pt]
 \textcolor{gray}{{\\ Alexandru - Eugen Ichim}}
     
 \vfill
@@ -72,6 +72,7 @@ The concept of superquadrics was first introduced in the Computer Graphics commu
 \end{figure}
 
 \subsubsection*{Mathematical Definition}
+\label{sec:math}
 They are created from two two-dimensional curves (a horizontal and a vertical curve) that form a three-dimensional surface under spherical product. For example, a unit sphere is created as the spherical product of a half circle in the plane orthogonal to $(x, y)$ is crossed with the full circle in the $(x, y)$ plane.
 
 \begin{equation}
@@ -141,31 +142,37 @@ Because of the limitation of the range of real numbers a 64-bit system can compu
 For the purpose of this work, we gathered data from multiple sources:
 
 \begin{itemize}
-	\item{\textbf{Created manually}}
-		\begin{figure}[h]
-		\centering
-		\includegraphics[width=0.2\columnwidth]{figures/2_components}
-		\includegraphics[width=0.3\columnwidth]{figures/3_components}
-		\includegraphics[width=0.2\columnwidth]{figures/4_components}
-		\end{figure}
-
-	\item{\textbf{Trimble 3D Warehouse}}
-		\begin{figure}[h]
-		\centering
-		\includegraphics[width=0.2\columnwidth]{figures/vase_1}
-		\includegraphics[width=0.2\columnwidth]{figures/vase_2}
-		\includegraphics[width=0.3\columnwidth]{figures/cup}
-		\end{figure}
-		
-		
-	\item{\textbf{Scanned with an RGB-D camera} - multiple frames registered with PCL KinFu.}
-		\begin{figure}[h]
-		\centering
-		\includegraphics[width=0.3\columnwidth]{figures/kinfu_1}
-		\includegraphics[width=0.3\columnwidth]{figures/kinfu_2}
-		\includegraphics[width=0.3\columnwidth]{figures/kinfu_3}
-		\end{figure}
+	\item{\textbf{Created manually} - using Google Sketchup - Figure \ref {fig:sketchup}}
+	\item{\textbf{Trimble 3D Warehouse} - \url{http://sketchup.google.com/3dwarehouse/} - Figure \ref {fig:trimble_warehouse}}
+	\item{\textbf{Scanned with an RGB-D camera} - multiple frames registered with PCL KinFu - Figure \ref{fig:kinfu_datasets}}
 \end{itemize}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.2\columnwidth]{figures/2_components}
+\includegraphics[width=0.3\columnwidth]{figures/3_components}
+\includegraphics[width=0.2\columnwidth]{figures/4_components}
+\caption {Example datasets created with Google Sketchup.}
+\label{fig:sketchup}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.2\columnwidth]{figures/vase_1}
+\includegraphics[width=0.2\columnwidth]{figures/vase_2}
+\includegraphics[width=0.3\columnwidth]{figures/cup}
+\caption {Example datasets downloaded from the Trimble 3D Warehouse.}
+\label{fig:trimble_warehouse}
+\end{figure}
+		
+\begin{figure}
+\centering
+\includegraphics[width=0.3\columnwidth]{figures/kinfu_1}
+\includegraphics[width=0.3\columnwidth]{figures/kinfu_2}
+\includegraphics[width=0.3\columnwidth]{figures/kinfu_3}
+\caption {Example datasets created using PCL KinFu.}
+\label{fig:kinfu_datasets}
+\end{figure}
 		
 		
 		
@@ -177,11 +184,122 @@ For the purpose of this work, we gathered data from multiple sources:
 \section {Sampling}
 \label{sec:sampling}
 
+Sampling superquadrics is important as it allows for easy visualization and for evaluating fitting or registration errors. We have tried multiple ways of doing this, as will be explained in this section.
+
 \subsection {VTK}
+
+Using the Visualization ToolKit library, the code for generating a superquadric centered at the origin is simply:
+
+\begin{verbatim}
+    vtkSmartPointer<vtkSuperquadricSource> superquadricSource = 
+       vtkSmartPointer<vtkSuperquadricSource>::New();
+    superquadricSource->SetPhiRoundness (epsilon_1);
+    superquadricSource->SetThetaRoundness (epsilon_2);
+    superquadricSource->SetScale (a, b, c);
+    superquadricSource->SetPhiResolution (1000);
+    superquadricSource->SetThetaResolution (1000);
+    superquadricSource->SetSize (1.);
+\end{verbatim}
+
+As the code suggests (setting $\phi$ and $\theta$ resolutions), this does nothing but uniformly sample the parameter space for the two angles and generate points using the explicit equation. This source can be then connected to a renderer and used to display the generated mesh - see Figure \ref{fig:sampling_VTK}.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.25\columnwidth]{figures/sampling_VTK_solid}
+\hspace {1cm}
+\includegraphics[width=0.25\columnwidth]{figures/sampling_VTK_wireframe}
+\caption {Superquadric sampling using the VTK library.}
+\label{fig:sampling_VTK}
+\end{figure}
+
 
 \subsection {Explicit}
 
+Here, we uniformly sample the two angular parameters of the superquadric, and set the correct mesh connectivity. As with the VTK results, we see that the meshes are not spatially sampled in an uniform way - there are not enough points around the corners and the middle of the shape - see Figure \ref{fig:sampling_explicit}.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.25\columnwidth]{figures/sampling_explicit_solid}
+\hspace {1cm}
+\includegraphics[width=0.25\columnwidth]{figures/sampling_explicit_cloud}
+\caption {Superquadric sampling by uniformly sampling the angular parameter space.}
+\label{fig:sampling_explicit}
+\end{figure}
+
+
 \subsection {Smart}
+
+much more suitable for computing errors and true distances
+
+superellipse implicit equation
+
+\begin{equation}
+\left(\frac{x}{a_1}\right)^{2/\epsilon} + \left(\frac{y}{a_2}\right)^{2/\epsilon} = 1
+\end{equation}
+
+and explicit
+\begin{equation}
+x(\theta) = \begin{pmatrix} a_1 \cos(\theta)^\epsilon \\ a_2 \sin(\theta)^\epsilon \end{pmatrix}
+\end{equation}
+
+arclength between two close points $x(\theta)$ and $x (\theta + \Delta_\theta (\theta))$ can be approximated by the euclidean distance between the points:
+\begin{equation}
+D (\theta) = | x(\theta) - x(\theta + \Delta_\theta(\theta)) |
+\end{equation}
+
+$\Delta_\theta(\theta)$ is small, first order approximation:
+
+\begin{equation}
+D(\theta)^2 = \left( \frac{\partial}{\partial \theta} (a_1 \cos (\theta)^\epsilon) \Delta_\theta (\theta) \right)^2 + 
+\left( \frac{\partial}{\partial \theta} (a_2 \sin (\theta)^\epsilon) \Delta_\theta (\theta) \right)^2
+\end{equation}
+
+which is equivalent to:
+
+\begin{equation}
+\Delta_\theta (\theta) = \frac{D(\theta)}{\epsilon} * \sqrt {\frac{ \cos (\theta) ^2 \sin (\theta) ^2} {a_1^2 \cos (\theta)^{2\epsilon} \sin(\theta)^4 + a_2^2 \sin (\theta)^{2\epsilon} \cos(\theta)^4}}
+\end{equation}
+
+By setting $D(\theta)$ to a constant spatial sampling value, the incremental updates of the angular parameter are:
+
+\begin{eqnarray}
+&& \theta_i = \theta_{i-1} + \Delta_\theta (\theta_i) \textnormal{ , with } \theta_0 = 0 \textnormal{, and } i \in \{ 1 ... N \} \textnormal {, and } \theta_N < \pi / 2 \\
+&& \theta_i = \theta_{i-1} - \Delta_\theta (\theta_i) \textnormal{ , with } \theta_0 = \pi/2 \textnormal{, and } i \in \{ 1 ... N \} \textnormal {, and } \theta_N > 0
+\end{eqnarray}
+
+There are singularities at $\theta = 0$ and $\theta = \pi/2$, so we need to treat them separately. When $\theta \rightarrow 0$, the superellipse can be approximated by:
+
+\begin{equation}
+x (\theta) = \begin{pmatrix} a_1 \\ a_2 \theta ^\epsilon \end{pmatrix}
+\end{equation}
+
+resulting in:
+
+\begin{equation}
+\Delta_\theta (\theta) = \left(\frac{D (\theta)}{a_2} - \theta^\epsilon \right)^{1/\epsilon} - \theta
+\end{equation}
+
+Similarly, for $\theta \rightarrow \pi/2$:
+
+\begin{equation}
+\Delta_\theta (\theta) = \left( \frac{D(\theta)}{a_1} - (\pi/2 - \theta)^\epsilon \right)^{1/\epsilon} - (\pi/2 - \theta)
+\end{equation}
+
+The final solution is to switch between the 3 branches depending on the current value of $\theta$.
+
+What was described until now is applied to a single superellipse. In order to spatially sample a superquadric in a uniform way, we sample  one superellipse for $\epsilon_1$ and one for $\epsilon_2$ and then compute their spherical product (see Section \ref{sec:math} for details).
+
+\cite{Pilu95equal-distancesampling}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.25\columnwidth]{figures/sampling_smart_solid}
+\hspace {1cm}
+\includegraphics[width=0.25\columnwidth]{figures/sampling_smart_cloud}
+\caption {Superquadric sampling by adapting the angular parameter sampling so that the 3D space is uniformly sampled.}
+\label{fig:sampling_smart}
+\end{figure}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -212,12 +330,14 @@ results
 reference paper, explain how it works roughly
 
 \subsection {Rigid Registration}
+Just like fitting, but only compute the transformation - and no need for correspondences
+
 
 \subsection {Voting Scheme}
 
 
 \section {Tabletop Demo}
-\label{sec:tabletop_demo}
+\label{sec:tabletop_demo} 
 
 kinfu, kinect, figures
 
