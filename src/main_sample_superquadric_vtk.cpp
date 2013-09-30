@@ -97,11 +97,11 @@ main (int argc,
   {
     // Create a superquadric
     vtkSmartPointer<vtkSuperquadricSource> superquadricSource = vtkSmartPointer<vtkSuperquadricSource>::New();
-    superquadricSource->SetThetaRoundness (epsilon_1); /// epsilon_1
-    superquadricSource->SetPhiRoundness (epsilon_2); /// epsilon_2
+    superquadricSource->SetThetaRoundness (epsilon_2);
+    superquadricSource->SetPhiRoundness (epsilon_1);
     superquadricSource->SetScale (a, b, c);
-    superquadricSource->SetPhiResolution (1000);
-    superquadricSource->SetThetaResolution (1000);
+    superquadricSource->SetPhiResolution (50);
+    superquadricSource->SetThetaResolution (50);
     superquadricSource->SetSize (1.);
 
     // Create a mapper and actor
