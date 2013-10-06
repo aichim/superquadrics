@@ -75,27 +75,19 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::preAlign (Eigen::Matrix<Ma
 template<typename PointT, typename MatScalar> double
 sq::SuperquadricRigidRegistration<PointT, MatScalar>::fit (Eigen::Matrix<MatScalar, 4, 4> &transform)
 {
-  Eigen::Matrix<MatScalar, 4, 4> init_transform_inverse;
+  Eigen::Matrix<MatScalar, 4, 4> transformation_prealign (Eigen::Matrix<MatScalar, 4, 4>::Identity ());
 
   if (pre_align_)
-  {
-    Eigen::Matrix<MatScalar, 4, 4> transf_prealign;
-    preAlign (transf_prealign);
-    init_transform_inverse = transf_prealign;//.inverse ();
-  }
+    preAlign (transformation_prealign);
   else
-    init_transform_inverse = init_transform_.inverse ();
+    transformation_prealign = init_transform_;
+
+
+  input_prealigned_.reset (new Cloud ());
+  pcl::transformPointCloud (*input_, *input_prealigned_, transformation_prealign);
 
   double xvec[6];
-  /// TODO put in the init transform
-  xvec[0] = init_transform_inverse (0, 3);
-  xvec[1] = init_transform_inverse (1, 3);
-  xvec[2] = init_transform_inverse (2, 3);
-  Eigen::Matrix<MatScalar, 3, 3> rot_mat = init_transform_inverse.block (0, 0, 3, 3);
-  Eigen::Matrix<MatScalar, 3, 1> euler_angles = rot_mat.eulerAngles (2, 0, 2);
-  xvec[3] = euler_angles (0, 0);
-  xvec[4] = euler_angles (1, 0);
-  xvec[5] = euler_angles (2, 0);
+  xvec[0] = xvec[1] = xvec[2] = xvec[3] = xvec[4] = xvec[5] = 0.;
 
 
   printf ("xvec before = ");
@@ -105,9 +97,9 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::fit (Eigen::Matrix<MatScal
 
 
   ceres::Problem problem;
-  for (size_t p_i = 0; p_i < input_->size (); ++p_i)
+  for (size_t p_i = 0; p_i < input_prealigned_->size (); ++p_i)
   {
-    const PointT &point = (*input_)[p_i];
+    const PointT &point = (*input_prealigned_)[p_i];
     ceres::CostFunction *cost_function = new ceres::AutoDiffCostFunction<SuperquadricCostFunctor, 1, 6> (new SuperquadricCostFunctor (point, e1_, e2_, a_, b_, c_));
     problem.AddResidualBlock (cost_function, NULL, xvec);
   }
@@ -116,7 +108,7 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::fit (Eigen::Matrix<MatScal
   options.max_num_iterations = 50;
   options.minimizer_type = ceres::TRUST_REGION;
   options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-  options.minimizer_progress_to_stdout = true;
+//  options.minimizer_progress_to_stdout = true;
   options.num_threads = 8;
 
 
@@ -129,8 +121,8 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::fit (Eigen::Matrix<MatScal
       summary.termination_type == ceres::DID_NOT_RUN)
   {
     PCL_ERROR ("Did not converge.\n");
-    std::cout << summary.FullReport () << std::endl;
-    transform = init_transform_inverse;
+//    std::cout << summary.FullReport () << std::endl;
+    transform = transformation_prealign;
     return (std::numeric_limits<double>::infinity ());
   }
 
@@ -151,6 +143,8 @@ sq::SuperquadricRigidRegistration<PointT, MatScalar>::fit (Eigen::Matrix<MatScal
   transform.block (0, 0, 3, 3) = Eigen::AngleAxis<MatScalar> (xvec[3], Eigen::Matrix<MatScalar, 3, 1>::UnitZ ()) *
                                  Eigen::AngleAxis<MatScalar> (xvec[4], Eigen::Matrix<MatScalar, 3, 1>::UnitX ()) *
                                  Eigen::AngleAxis<MatScalar> (xvec[5], Eigen::Matrix<MatScalar, 3, 1>::UnitZ ()).matrix ();
+
+  transform = transform * transformation_prealign;
 
 
   MatScalar final_error = computeSuperQuadricError<PointT, MatScalar> (input_,

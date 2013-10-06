@@ -120,7 +120,7 @@ main (int argc,
 
 
 
-
+/*
   /// Generate superquadric with the new smart sampling scheme
   sq::SuperquadricSamplingUniform<PointXYZ, double> sampling_uniform;
   sampling_uniform.setParameters (params);
@@ -128,7 +128,7 @@ main (int argc,
   PointCloud<PointXYZ> cloud_uniform;
   sampling_uniform.generatePointCloud (cloud_uniform);
   io::savePCDFile ("uniform.pcd", cloud_uniform, true);
-
+*/
 
 
   return EXIT_SUCCESS;

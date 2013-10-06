@@ -108,7 +108,7 @@ sq::SuperquadricDetection<PointT, Scalar>::process (typename std::vector<Superqu
     std::vector<int> nn_large_indices;
     std::vector<float> nn_large_dists;
     PointT p;
-    Eigen::Matrix4d tr = transf.inverse ().template cast<double> ();
+    Eigen::Matrix4d tr = transf.template cast<double> ().inverse ();
     p.x = tr (0, 3); p.y = tr (1, 3); p.z = tr (2, 3);
     tree.radiusSearch (p, max_radius, nn_large_indices, nn_large_dists);
 //    tree.radiusSearch (p, min_radius, nn_large_indices, nn_large_dists);
@@ -125,7 +125,7 @@ sq::SuperquadricDetection<PointT, Scalar>::process (typename std::vector<Superqu
       Eigen::Vector4d point ((*cloud_input_)[nn_large_indices[i]].x,
                              (*cloud_input_)[nn_large_indices[i]].y,
                              (*cloud_input_)[nn_large_indices[i]].z,
-                             0.);
+                             1.);
       point = transf * point;
 
       double value = superquadric_function<Scalar> (point[0], point[1], point[2],

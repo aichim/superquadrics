@@ -9,6 +9,8 @@
 #include "fit_superquadric_ceres.h"
 #include "sample_superquadric_uniform.h"
 
+#include <pcl/console/time.h>
+
 using namespace pcl;
 
 int
@@ -32,9 +34,15 @@ main (int argc,
   PointCloud<PointXYZ>::Ptr cloud_input (new PointCloud<PointXYZ> ());
   io::loadPCDFile (cloud_path, *cloud_input);
 
+  pcl::console::TicToc timer;
+  timer.tic ();
   sq::TabletopSegmentation<PointXYZ> tabletop_segmentation;
   tabletop_segmentation.setInputCloud (cloud_input);
   tabletop_segmentation.process ();
+  double time = timer.toc ();
+
+  PCL_ERROR ("Segmentation time: %f\n", time);
+
 
   std::vector<PointCloud<PointXYZ>::Ptr> cloud_clusters;
   tabletop_segmentation.getObjectClusters (cloud_clusters);
@@ -57,9 +65,12 @@ main (int argc,
   PCL_INFO ("Tabletop clustering done, press 'q' to fit superquadrics\n");
   visualizer.spin ();
 
-
+  pcl::console::TicToc timer_fitting;
+  timer_fitting.tic ();
   for (size_t c_i = 0; c_i < cloud_clusters.size (); ++c_i)
   {
+    timer.tic ();
+
     double min_fit = std::numeric_limits<double>::max ();
     sq::SuperquadricParameters<double> min_params;
 
@@ -79,6 +90,12 @@ main (int argc,
         min_params = params;
       }
     }
+
+    time = timer.toc ();
+    PCL_ERROR ("3 fittings: %f\n", time);
+
+    if (min_fit > std::numeric_limits<double>::max () - 100.)
+      continue;
 
 //    sq::SuperquadricSamplingUniform<PointXYZ, double> sampling;
 //    sampling.setSpatialSampling (0.001);
@@ -103,6 +120,9 @@ main (int argc,
 //    visualizer.addPointCloud<PointXYZ> (cloud_fitted, color_cloud, str);
 //    io::savePCDFile ("caca.pcd", *cloud_fitted, true);
   }
+
+  time = timer_fitting.toc ();
+  PCL_ERROR ("Total fitting time: %f\n", time);
 
   PCL_INFO ("Superquadric fitting done. Press 'q' to quit.\n");
   visualizer.spin ();

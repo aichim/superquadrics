@@ -72,6 +72,7 @@ public:
 
 protected:
   CloudConstPtr input_;
+  CloudPtr input_prealigned_;
 
   MatScalar e1_, e2_, a_, b_, c_;
   Eigen::Matrix<MatScalar, 4, 4> init_transform_;

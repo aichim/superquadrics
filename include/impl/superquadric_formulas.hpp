@@ -108,7 +108,7 @@ sq::computeSuperQuadricError (typename pcl::PointCloud<PointT>::ConstPtr cloud,
     Eigen::Matrix<Scalar, 4, 1> xyz_tr = transform * xyz;
     double op = (Eigen::Matrix<Scalar, 3, 1> (xyz_tr[0], xyz_tr[1], xyz_tr[2])).norm ();
 
-    double val = op * superquadric_function (xyz_tr[0], xyz_tr[1], xyz_tr[2], e1, e2, a, b, c);
+    double val = op * superquadric_function_scale_weighting (xyz_tr[0], xyz_tr[1], xyz_tr[2], e1, e2, a, b, c);
     error += val * val;
   }
 

@@ -157,7 +157,7 @@ sq::SuperquadricFittingCeres<PointT, MatScalar>::fit (SuperquadricParameters<Mat
                                       Eigen::AngleAxis<MatScalar> (xvec[10], Eigen::Matrix<MatScalar, 3, 1>::UnitZ ()).matrix ();
 
 
-  clampParameters (xvec[0], xvec[1]);
+//  clampParameters (xvec[0], xvec[1]);
 
   parameters.e1 = xvec[0];
   parameters.e2 = xvec[1];

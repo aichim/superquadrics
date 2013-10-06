@@ -6,11 +6,13 @@
 #include "superquadric_formulas.h"
 #include "sample_superquadric.h"
 
+#include <pcl/console/parse.h>
+
 
 using namespace pcl;
 
-const double cluster_sq_error = 10.;
-const size_t min_cluster_points_ = 500;
+const double cluster_sq_error = 500;
+const size_t min_cluster_points_ = 300;
 
 
 struct SuperquadricCluster
@@ -359,8 +361,22 @@ main (int argc,
 {
   google::InitGoogleLogging (argv[0]);
 
+  std::string cloud_path = "";
+  console::parse_argument (argc, argv, "-cloud", cloud_path);
+
+  std::string output_dir = "";
+  console::parse_argument (argc, argv, "-output", output_dir);
+
+  if (cloud_path == "" ||
+      output_dir == "")
+  {
+    PCL_ERROR ("Syntax error. Correct: %s -cloud <path_to_input_cloud> -output <output folder to write the results in>\n", argv[0]);
+    return (-1);
+  }
+
   PointCloud<PointXYZ>::Ptr cloud (new PointCloud<PointXYZ> ());
-  io::loadPCDFile (argv[1], *cloud);
+  io::loadPCDFile (cloud_path, *cloud);
+
 
   PCL_INFO ("####### SPLITTING ######\n");
 
@@ -407,6 +423,7 @@ main (int argc,
 
 
   /// Generate the cluster point clouds for easy result visualization
+  boost::filesystem::create_directory (output_dir.c_str ());
   for (size_t i = 0; i < clusters_merge.size (); ++i)
   {
     sq::SuperquadricSampling<PointXYZ, double> sampling;
@@ -416,12 +433,12 @@ main (int argc,
     sampling.generatePointCloud (cluster_cloud);
 
     char str[512];
-    sprintf (str, "cluster_%zu.pcd", i);
+    sprintf (str, "%s/cluster_%zu.pcd", output_dir.c_str (), i);
     io::savePCDFileBinaryCompressed (str, cluster_cloud);
 
     PolygonMesh cluster_mesh;
     sampling.generateMesh (cluster_mesh);
-    sprintf (str, "cluster_%zu.vtk", i);
+    sprintf (str, "%s/cluster_%zu.vtk", output_dir.c_str (), i);
     io::savePolygonFileVTK (str, cluster_mesh);
   }
 

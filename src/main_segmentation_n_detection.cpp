@@ -77,7 +77,7 @@ main (int argc,
 
     /// TODO need to sort the hypotheses
     /// Could just hack it and take the best fitting error instead
-
+/*
     double min_fit_error = std::numeric_limits<double>::max ();
     size_t min_fit_error_i = 0;
     for (size_t h_i = 0; h_i < hypotheses.size (); ++h_i)
@@ -87,7 +87,19 @@ main (int argc,
         min_fit_error = hypotheses[h_i].fit_error;
         min_fit_error_i = h_i;
       }
+    }*/
+
+    int max_num_surface_points = std::numeric_limits<int>::min ();
+    size_t min_fit_error_i = 0;
+    for (size_t h_i = 0; h_i < hypotheses.size (); ++h_i)
+    {
+      if (max_num_surface_points < hypotheses[h_i].num_surface_points)
+      {
+        max_num_surface_points = hypotheses[h_i].num_surface_points;
+        min_fit_error_i = h_i;
+      }
     }
+
 
     sq::SuperquadricSampling<PointXYZ, double> sampling;
     sq::SuperquadricParameters<double> params = params_to_detect;

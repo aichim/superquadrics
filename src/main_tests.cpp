@@ -10,6 +10,7 @@
 #include "sample_superquadric_uniform.h"
 #include "superquadric_detection.h"
 
+#include <pcl/io/vtk_lib_io.h>
 
 using namespace pcl;
 
@@ -84,11 +85,6 @@ main (int argc,
   sq_reg.setParameters (params_to_detect.e1, params_to_detect.e2,
                         params_to_detect.a, params_to_detect.b, params_to_detect.c);
 
- /* transformation = Eigen::Matrix4d (transformation.inverse ());
-  transformation (0, 3) += 0.1;
-  transformation (1, 3) += 0.02;
-  transformation (2, 3) += 0.2;
-  sq_reg.setInitTransform (transformation);*/
 
   double min_fit = std::numeric_limits<double>::max ();
   Eigen::Matrix4d min_transf;
@@ -118,19 +114,49 @@ main (int argc,
 
   std::cout << "transform result:\n" << min_transf << std::endl;
 
-//  transf_result = Eigen::Matrix4d (transf_result.inverse ());
 
   PointCloud<PointXYZ>::Ptr cloud_tr (new PointCloud<PointXYZ> ());
   transformPointCloud (*cloud_input, *cloud_tr, min_transf);
   io::savePCDFileBinaryCompressed ("cloud_tr.pcd", *cloud_tr);
 
   sq::SuperquadricSampling<PointXYZ, double> sampling;
-  params_to_detect.transform = Eigen::Matrix4d::Identity ();
-//  params_to_detect.transform = transformation.inverse ();
+//  params_to_detect.transform = Eigen::Matrix4d::Identity ();
+  params_to_detect.transform = min_transf;
   sampling.setParameters (params_to_detect);
   PointCloud<PointXYZ>::Ptr cloud_obj (new PointCloud<PointXYZ> ());
   sampling.generatePointCloud (*cloud_obj);
   io::savePCDFileBinaryCompressed ("cloud_obj.pcd", *cloud_obj);
+
+
+
+
+  //// using the detection pipeline
+
+
+  sq::SuperquadricDetection<PointXYZ, double> detection;
+  detection.setInputCloud (cloud_input);
+  detection.setSuperquadricParams (params_to_detect);
+  std::vector<sq::SuperquadricDetection<PointXYZ, double>::SuperquadricDetectionHypothesis> hypotheses;
+  detection.process (hypotheses);
+
+  double min_fit_error = std::numeric_limits<double>::max ();
+  size_t min_fit_error_i = 0;
+  for (size_t h_i = 0; h_i < hypotheses.size (); ++h_i)
+  {
+    if (min_fit_error > hypotheses[h_i].fit_error)
+    {
+      min_fit_error = hypotheses[h_i].fit_error;
+      min_fit_error_i = h_i;
+    }
+  }
+
+  sq::SuperquadricSampling<PointXYZ, double> sampling_mesh;
+  sq::SuperquadricParameters<double> params = params_to_detect;
+  params.transform = hypotheses[min_fit_error_i].transform;
+  sampling_mesh.setParameters (params);
+  PolygonMesh mesh;
+  sampling_mesh.generateMesh (mesh);
+  io::savePolygonFileVTK ("cloud_detected.vtk", mesh);
 
 
   return (0);

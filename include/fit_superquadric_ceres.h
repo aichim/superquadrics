@@ -37,10 +37,6 @@ public:
   setInitParameters (SuperquadricParameters<MatScalar> &init_params)
   { init_parameters_ = init_params; }
 
-//  void
-//  setIndices (const pcl::IndicesConstPtr &indices)
-//  { indices_ = indices; }
-
   void
   preAlign (Eigen::Matrix<MatScalar, 4, 4> &transformation_prealign,
             Eigen::Matrix<MatScalar, 3, 1> &variances);
