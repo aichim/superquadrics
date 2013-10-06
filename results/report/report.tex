@@ -1,8 +1,17 @@
 \documentclass{article}
+
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french,german,english]{babel}
+
 \usepackage{fullpage}
 \usepackage{graphicx,xcolor}
 \usepackage{url}
 \usepackage{amsmath}
+
+\usepackage{subfigure}
+
 
 \begin{document}
 
@@ -152,7 +161,7 @@ For the purpose of this work, we gathered data from multiple sources:
 \includegraphics[width=0.2\columnwidth]{figures/2_components}
 \includegraphics[width=0.3\columnwidth]{figures/3_components}
 \includegraphics[width=0.2\columnwidth]{figures/4_components}
-\caption {Example datasets created with Google Sketchup.}
+\caption {Example datasets created with Google Sketchup.}
 \label{fig:sketchup}
 \end{figure}
 
@@ -188,7 +197,7 @@ Sampling superquadrics is important as it allows for easy visualization and for 
 
 \subsection {VTK}
 
-Using the Visualization ToolKit library, the code for generating a superquadric centered at the origin is simply:
+Using the Visualization ToolKit library, the code for generating a superquadric centered at the origin is simply:
 
 \begin{verbatim}
     vtkSmartPointer<vtkSuperquadricSource> superquadricSource = 
@@ -205,7 +214,7 @@ As the code suggests (setting $\phi$ and $\theta$ resolutions), this does nothin
 
 \begin{figure}
 \centering
-\includegraphics[width=0.25\columnwidth]{figures/sampling_VTK_solid}
+\includegraphics[width=0.25\columnwidth]{figures/sampling_VTK_solid}
 \hspace {1cm}
 \includegraphics[width=0.25\columnwidth]{figures/sampling_VTK_wireframe}
 \caption {Superquadric sampling using the VTK library.}
@@ -219,7 +228,7 @@ Here, we uniformly sample the two angular parameters of the superquadric, and se
 
 \begin{figure}
 \centering
-\includegraphics[width=0.25\columnwidth]{figures/sampling_explicit_solid}
+\includegraphics[width=0.25\columnwidth]{figures/sampling_explicit_solid}
 \hspace {1cm}
 \includegraphics[width=0.25\columnwidth]{figures/sampling_explicit_cloud}
 \caption {Superquadric sampling by uniformly sampling the angular parameter space.}
@@ -229,25 +238,23 @@ Here, we uniformly sample the two angular parameters of the superquadric, and se
 
 \subsection {Smart}
 
-much more suitable for computing errors and true distances
-
-superellipse implicit equation
+In order to obtain uniform spatial sampling, which is much more suitable for computing errors, we need to look deeper into the problem. \cite{Pilu95equal-distancesampling} suggests a fast and mathematically sound solution. We start our derivation with the implicit and explicit equations of a superellipse:
 
 \begin{equation}
 \left(\frac{x}{a_1}\right)^{2/\epsilon} + \left(\frac{y}{a_2}\right)^{2/\epsilon} = 1
 \end{equation}
 
-and explicit
 \begin{equation}
 x(\theta) = \begin{pmatrix} a_1 \cos(\theta)^\epsilon \\ a_2 \sin(\theta)^\epsilon \end{pmatrix}
 \end{equation}
 
-arclength between two close points $x(\theta)$ and $x (\theta + \Delta_\theta (\theta))$ can be approximated by the euclidean distance between the points:
+The arclength between two close points on such a curve is $x(\theta)$ and $x (\theta + \Delta_\theta (\theta))$ and can be approximated by the euclidean distance between the points:
+
 \begin{equation}
 D (\theta) = | x(\theta) - x(\theta + \Delta_\theta(\theta)) |
 \end{equation}
 
-$\Delta_\theta(\theta)$ is small, first order approximation:
+Because $\Delta_\theta(\theta)$ is small, we can rely on a first order approximation:
 
 \begin{equation}
 D(\theta)^2 = \left( \frac{\partial}{\partial \theta} (a_1 \cos (\theta)^\epsilon) \Delta_\theta (\theta) \right)^2 + 
@@ -287,15 +294,13 @@ Similarly, for $\theta \rightarrow \pi/2$:
 
 The final solution is to switch between the 3 branches depending on the current value of $\theta$.
 
-What was described until now is applied to a single superellipse. In order to spatially sample a superquadric in a uniform way, we sample  one superellipse for $\epsilon_1$ and one for $\epsilon_2$ and then compute their spherical product (see Section \ref{sec:math} for details).
-
-\cite{Pilu95equal-distancesampling}
+What was described until now is applied to a single superellipse. In order to spatially sample a superquadric in an uniform way, we sample one superellipse for $\epsilon_1$ and one for $\epsilon_2$ and then compute their spherical product (see Section \ref{sec:math} for details). Figure \ref{fig:sampling_smart} shows the results we obtained.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.25\columnwidth]{figures/sampling_smart_solid}
+%\includegraphics[width=0.25\columnwidth]{figures/sampling_smart_solid}
 \hspace {1cm}
-\includegraphics[width=0.25\columnwidth]{figures/sampling_smart_cloud}
+%\includegraphics[width=0.25\columnwidth]{figures/sampling_smart_cloud}
 \caption {Superquadric sampling by adapting the angular parameter sampling so that the 3D space is uniformly sampled.}
 \label{fig:sampling_smart}
 \end{figure}
@@ -307,19 +312,91 @@ What was described until now is applied to a single superellipse. In order to sp
 \section {Fitting}
 \label{sec:fitting}
 
-Various error functions with paper references
+\subsection*{Error functions}
 
-solvers: Eigen LM unstable, CERES
+One could simply use the implicit equation for fitting the superquadric models, but experiments show that the optimizer tends to converge to models that incorporate the given point set as a small part of their shape (i.e., very large solids). As such, \cite{SQ_2000} suggest to scale the error function by the square root of the product of the scales of the superquadric, in order to penalize large volumes. This technique is employed and confirmed by \cite{journals/pami/KatsoulasBK08}, \cite{conf/wscg/ChevalierJB03}. Observe that the additional $\epsilon_1$ exponent is used in order to have a correct distance measure independent of the shape parameter. In addition, \cite{conf/wscg/ChevalierJB03} suggest to use the radial Euclidean distance instead of the normal Euclidean distance (i.e., scale the Euclidean distance by $OP$, the distance between the point and the center of the superquadric).
 
-Derivatives - explicit (from Maple - in superquadric\_formulas.h), numerical differentiation, autodiff from CERES with Jet types + explain what Jet is
+\begin{equation}
+min \sqrt {a_1 a_2 a_3} \sum_{k=0}^n ||OP|| * \left[ \left( \left( \left( \frac{x}{a_1}\right)^{\frac{2}{\epsilon_2}} + \left( \frac{y}{a_2} \right) ^{\frac{2}{\epsilon_2}} \right)^{\epsilon_2 / \epsilon_1} + \left( \frac{z}{a_3} \right) ^{2/\epsilon_1} \right) ^{\epsilon_1} - 1 \right]
+\end{equation}
 
-Initialisation from PCA
+
+In our implementation, we looked into the unstable branch of the Eigen library \cite{eigenweb} which contains a rough Levenberg Marquardt algorithm implementation. Due to its lack of customizability, we looked for better options. As such, we decided to use the CERES solver library \cite{ceres-solver}. This is a large library employed for applications such as Google Street View, Google Maps. It is essentially a a portable C++ library that allows for modeling and solving large complicated nonlinear least squares problems.
+
+At each iteration of the LM algorithm, it needs to compute the Jacobian matrix of the vector of variables. CERES allows for three options:
+
+\begin{itemize}
+	\item {using the explicit formula in the code. We used Maple to generate the C code from the symbolic partial differentiation of the error function, this yielded good results.}
+	\item {using the possibility of numerical differentiation. Apart from the fact that it has to compute the error function twice, there are a lot of numerical stability problems due to the very large range of values involved in the calculation, straining the floating point representation past its limits.}
+	\item {using the auto differentiation module of CERES. By using a special type named Jet, CERES is able to compute the symbolic derivatives of our expressions. Jet is an implementation of n-dimensional dual numbers. We decided to use this technique in the end, as it allows for quick and easy modifications of the error functions, and it yielded good performance.}
+\end{itemize}
+
+\subsection*{Initial fitting parameters}
+
+Due to the presence of numerous local minima in the superquadric function landscape, we need to have a good initialization for the optimizer. One immediate idea is to set the translation to be the center of the point set we are trying to fit the model into.
+
+In addition, \cite{conf/icra/BiegelbauerV07} suggests that the initial solution pose for the superquadric fitting optimization is obtained by aligning the z-axis of the superquadric which each of the 3 central moments of the point set (i.e., the 3 PCA decomposition axes). We then choose the fitting with the best error out of the 3.
+
+Furthermore, \cite{xiao2005building} propose that $\epsilon_1$ and $\epsilon_2$ be initialized at their midrange values of 1 (considering that the range is $[0.1, 1.9]$). Similar to the previous paper, the orientation is to be set such that the axes of the superquadric are aligned to the principal axes of the data. Moreover, we assume that the point distribution on the principal axes is Gaussian, so we can initialize the 3 scale parameters of the superquadric to be 3 times the standard deviation of the points on each of the PCA axis (the square roots of the eigenvalues of the covariance matrix of the point set).
+
+A set of results are visualized in Figure \ref{fig:fitting_results}.
+
+\begin{figure}
+\centering
+\subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/fitting_example_1}} \\
+\subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/fitting_example_2}} \\
+\subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/fitting_example_3}} \\
+\subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/fitting_example_4}}
+
+\caption {Results of superquadric fitting on point clouds of complete single objects.}
+\label{fitting_results}
+\end{figure}
+
 
 \subsection {Multipart Fitting with a Split \& Merge Approach}
 
-explain what it is, reference paper
+Another interesting direction we looked into is that of explaining a set of points by multiple superquadric models. \cite{doi:10.1117/1.1762516} propose a simple approach where a point set is segmented based on the local curvature, and then each cluster is fitted with a parametric model. Although the results presented in the paper looked reasonably good, we did not go for this technique (although we presented a similar per-cluster object fitting technique in Section \ref{sec:tabletop_demo}), as we saw possible robustness problems.
 
-results
+As a result, we found the split and merge approach of Chevalier et al. \cite{conf/wscg/ChevalierJB03} to be a better choice.
+
+\textbf{Splitting}
+\begin{itemize}
+	\item {fit a superquadric in the current set of 3D points}
+	\item {if the fitting error is less than a threshold $T$, then we stop (i.e., this cluster is well fitted in a superquadric)}
+	\item {otherwise, the set of points is splitted in two regions, by using the plane orthogonal to the principal axis of the point set and going through the centroid of the points.}
+	\item {the procedure is then called recursively on each half-subset until the number of points is too small for the cluster to be split again.}
+\end{itemize}
+
+\textbf{Merging}
+\begin{itemize}
+	\item {for each subset of points, determine its list of neighboring subsets. (*)}
+	\item {try to merge the subset with each of its neighbors, choosing the merge that has a fitting error below a threshold $T'$ and the volume of the new superellipsoid is smaller than the sum of the volumes of the two superellipsoids fitted in the cluster before.}
+	\item {re-iterate until no more merges are done.}
+\end{itemize}
+
+(*) - the original paper does not explain how the neighbouring subsets are found. We employ a simple technique to solve this issue: when doing the splitting, we store all the splitting planes. Two subsets are considered to be neighbouring if the segment connecting the centroids intersects less than 3 splitting planes.
+
+Figure \ref{fig:split_merge} shows a few results we got by using this algorithm on synthetic data. We tested this technique on real data, but with no good results, as it is very sensitive to incomplete data. But it seems to work fairly well on complete CAD models. Further testing should be done here with full 360 degrees KinFu scans.
+
+\begin{figure}
+\centering
+\subfigure[]{
+  \includegraphics[width=0.3\columnwidth]{figures/2_components_cloud}}
+\subfigure[]{
+  \includegraphics[width=0.3\columnwidth]{figures/2_components_fitted}}
+
+\subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/3_ellipsoids_cloud}}
+\subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/3_ellipsoids_fitted}}
+
+\caption {Split and merge algorithm results.}
+\label{fig:split_merge}
+\end{figure}
 
 
 
@@ -327,33 +404,128 @@ results
 \section {Detection}
 \label{sec:detection}
 
-reference paper, explain how it works roughly
+One of most popular techniques for detecting parametrized models in point cloud scenes is RANSAC \cite{fischler1981random}. Superquadric object detection has been tackled in \cite{afanasyev3d} \cite{conf/caip/KrivicS01} \cite{conf/icra/BiegelbauerV07}, and we considered that the approach of Biegelbauer et al. \cite{conf/icra/BiegelbauerV07} had the most convincing results and we implemented it.
 
-\subsection {Rigid Registration}
-Just like fitting, but only compute the transformation - and no need for correspondences
+Figure \ref{fig:superquadric_detection_schematic} shows the general idea behind Biegelbauer's solution. The first step is to preprocess the data by removing the largest plane and possibly segmenting clusters of points that might represent separate objects in order to ease the detection process. Next, we generate $m$ hypotheses by selecting $m$ (~20) random seed points from the scene. Then, we find the points in the neighbourhood of the seed point of size equal to the minimum scaling parameter of the superquadric we are looking for ($min (a, b, c)$). Inside this small set of points, we randomly choose 30 points and try to rigidly align the superquadric we are looking for. We repeat this process $ransac\_restarts$ times (~10) and choose the best fitting pose. This pose is then used as an initialisation for a fitting procedure that includes all the points within $1.2 * max(a,b,c)$ of the seed point. We then store the fitting error and the number of interior and surface points to the parametric model. We then rank all the possible poses by the fitting error, number of surface and interior points and choose the one which has the lowest sum of ranks.
 
+\begin{figure}
+\centering
+\includegraphics[width=0.55\columnwidth]{figures/superquadric_detection_schematic}
 
-\subsection {Voting Scheme}
+\caption{Superquadric detection pipeline as proposed by Biegelbauer et al. \cite{conf/icra/BiegelbauerV07}.}
+\label{fig:superquadric_detection_schematic}
+\end{figure}
 
+One needs to note that finding the pose of a given superquadric inside a set of points is done similarly to the superquadric fitting presented in Section \ref{sec:fitting}, but we only the 6 parameters for the pose are allowed to vary. However, we use the same initialisation techniques based on the principal axes of the point set.
 
 \section {Tabletop Demo}
 \label{sec:tabletop_demo} 
 
-kinfu, kinect, figures
+In order to demonstrate the superquadric algorithms we implemented on real world datasets, we have put together a pipeline for processing RGB-D data:
 
-how I do the segmentation + clustering
+\begin{enumerate}
+\item {Scan a scene for a few seconds (with an Asus Xtion Pro RGB-D camera) and register the frames using PCL KinFu. The input of the next stages is the point cloud obtained from the vertices of the 3D accumulation grid of KinFu.}
+\item {Find the largest plane using RANSAC on the whole cloud.}
+\item {Perform Euclidean clustering on the points that were identified to lie on the plane in order to find the largest continuous surface and discard the other points, and recompute the plane equation.}
+\item {Project the planar points onto the plane and compute the concave hull in 2D. Simplify the 2D contour to a polygon with a few vertices.}
+\item {(Optional) Filter the non-planar points by discarding the ones that are not above/below the plane polygon (i.e., their projection onto the plane does not lie within the 2D polygon).}
+\item {With the non-planar points, do Euclidean clustering again in order to separate different objects.}
+\end{enumerate}
+
+A couple of example results of this procedure can be seen in Figure \ref{fig:tabletop_segmentation}.
+
+\begin{figure}
+\centering
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/segmentation_1_before}}
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/segmentation_1_after}}
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/segmentation_2_before}}
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/segmentation_2_after}}
+
+\caption{Our proposed tabletop segmentation: (a, c) the input cloud; (b, d) the output: the planar polygon and the separate object clusters that can be further processed.}
+\label{fig:tabletop_segmentation}
+\end{figure}
+
+With the segmented data, we proceed in two directions: one is to fit a superquadric object to each separate cluster and one is to locate an object given its superquadric parametric description.
+
+\textbf{Superquadric fitting in real RGB-D data}
+Figure \ref{fig:rgbd_fitting} shows the results we got and Table \ref{table:rgbd_fitting_timing} the time performance of our implementation.
+
+\begin{figure}
+\centering
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/rgbd_fitting_1}}
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/rgbd_fitting_2}}
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/rgbd_fitting_3}}
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/rgbd_fitting_4}}
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/rgbd_fitting_5}}
+
+\caption{Superquadric fitting results of segmented RGB-D data}
+\label{fig:rgbd_fitting}
+\end{figure}
+
+
+\begin{table}
+\centering
+\begin{tabular}{| c | c | c |}
+\hline
+Dataset & Segmentation time [s] & Successful cluster fitting [s] \\
+\hline
+kinfu\_1 & 22.3 & 6.2 \\
+kinfu\_2 & 28.7 & 6.4 \\
+kinfu\_3 & 20.8 & 5.8 \\
+kinfu\_4 & 22.3 & 6.2 \\
+kinfu\_5 & 28.4 & 5.5 \\
+\hline
+\end{tabular}
+
+\caption {Performance timing of superquadric fitting on segmented RGB-D data.}
+\label {table:rgbd_fitting_timing}
+\end{table}
+
+
+Next, we look into the object detection pipeline and apply to our tabletop context. We perform superquadric object detection with the parameters learnt for a bottle for each cluster separately. The results are shown in Figure \ref{fig:rgbd_detection}.
+
+\begin{figure}
+\centering
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/rgbd_detection_1}}
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/rgbd_detection_2}}
+ \subfigure[]{
+  \includegraphics[width=0.45\columnwidth]{figures/rgbd_detection_3}}
+
+\caption{Superquadric detection results of segmented RGB-D data}
+\label{fig:rgbd_detection}
+\end{figure}
+
 
 
 \section {Conclusion and Future Work}
 \label{sec:conclusion}
 
-check Google doc
+We have presented the theoretical background and the results we obtained during the second Toyota Code Sprint in collaboration with Open Perception. The outcome encourages to continue exploring the possible applications of parametric models in order to describe real world scans for robotics or commercial applications.
 
-implement everything in PCL
+For future work, we will look into the following:
 
-tutorial on the website
+\begin{itemize}
+	\item {integrate the code into PCL - this has been currently avoided due to the additional dependency to CERES and due to the highly experimental status of the implementations.}
+	\item {tutorial/article on the PCL website to attract attention to the results of the project and get external feedback, or possible ideas for improvement.}
+	\item {evaluate the superquadric fitting using a vfh\_clustering type algorithm and compare it to other state-of-the-art object detection/fitting approaches.}
+	\item {explore further possibilities of point cloud data modeling, such as \cite{li_globFit_sigg11}, \cite{Shen:2012:SRP:2366145.2366199}}
+	\item {superquadrics with global deformations.}
+	\item {look into using different parametric solid models, other than superquadric, that might yield more descriptive power.}
+\end{itemize}
 
 
+\newpage
 \bibliography{references}
 \bibliographystyle{plain}
 
