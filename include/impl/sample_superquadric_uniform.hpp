@@ -19,7 +19,8 @@ sq::SuperquadricSamplingUniform<PointT, Scalar>::updateTheta (const double a1,
                                                               const double eps,
                                                               const double theta)
 {
-  if (theta > 1e-2)// &&
+  const double thresh = 1e-2;
+  if (theta > thresh)
 //      theta < M_PI/2. - 1e-2)
   {
     PCL_INFO ("first: %f, inside sqrt %f\n",
@@ -29,12 +30,12 @@ sq::SuperquadricSamplingUniform<PointT, Scalar>::updateTheta (const double a1,
     return (D_ / eps * cos (theta) * sin (theta) * sqrt (1./ (a1*a1 * pow (cos(theta), 2*eps) * pow(sin(theta), 4.) +
                                                               a2*a2 * pow (sin(theta), 2*eps) * pow(cos(theta), 4.))));
   }
-  else if (theta <= 1e-2 && theta > 0.)
+  else if (theta <= thresh && theta > 0.)
   {
     PCL_INFO ("special option: theta %f, theta^eps %f,   %f\n",
               theta, pow(theta, eps),
               D_ / a2  - pow (theta, eps));
-    return (pow (fabs (D_ / a2  + pow (theta, eps)), 1. / eps) - theta);
+    return (pow (fabs (D_ / a2  - pow (theta, eps)), 1. / eps) - theta);
   }
   else
   {
@@ -62,7 +63,7 @@ sq::SuperquadricSamplingUniform<PointT, Scalar>::generatePointCloud (pcl::PointC
     PCL_INFO ("Eta %f, omega %f at sample %zu\n", eta, omega, cloud.size ());
     /// Generate sample
     double x1, x2, y1, y2;
-    if (omega > M_PI/2. - 5e-1)
+    if (omega > M_PI/2. - 6e-1)
     {
       omega = std::max (M_PI/2. - omega, 0.);
       omega_increasing = false;
@@ -70,18 +71,19 @@ sq::SuperquadricSamplingUniform<PointT, Scalar>::generatePointCloud (pcl::PointC
 
     if (omega_increasing)
     {
-      x1 = pow (cos (omega), params_.e2);
-      x2 = params_.c * pow (sin (omega), params_.e2);
+      x1 = pow (cos (omega), params_.e1);
+      x2 = params_.c * pow (sin (omega), params_.e1);
     }
     else
     {
       /// Swap them
-      x1 = pow (sin (omega), params_.e2);
-      x2 = params_.c * pow (cos (omega), params_.e2);
+      x1 = pow (sin (omega), params_.e1);
+      x2 = params_.c * pow (cos (omega), params_.e1);
     }
 
     /// Now update the parameters
-    double update_omega = updateTheta (params_.a, params_.b, params_.e2, omega);
+    double update_omega = std::max (updateTheta (params_.a, params_.b, params_.e1, omega), 1e-4);
+    PCL_INFO ("Update omega: %f\n", update_omega);
     if (omega_increasing)
       omega += update_omega;
     else
@@ -90,13 +92,13 @@ sq::SuperquadricSamplingUniform<PointT, Scalar>::generatePointCloud (pcl::PointC
 
     if (eta_increasing)
     {
-      y1 = params_.a * pow (cos (eta), params_.e1);
-      y2 = params_.b * pow (sin (eta), params_.e1);
+      y1 = params_.a * pow (cos (eta), params_.e2);
+      y2 = params_.b * pow (sin (eta), params_.e2);
     }
     else
     {
-      y1 = params_.a * pow (sin (eta), params_.e1);
-      y2 = params_.b * pow (cos (eta), params_.e1);
+      y1 = params_.a * pow (sin (eta), params_.e2);
+      y2 = params_.b * pow (cos (eta), params_.e2);
     }
 
     if (omega < 0
@@ -105,21 +107,19 @@ sq::SuperquadricSamplingUniform<PointT, Scalar>::generatePointCloud (pcl::PointC
       omega = start_value;
       omega_increasing = true;
 
-      if (eta > M_PI/2. - 5e-1)
+      if (eta > M_PI/2. - 6e-1)
       {
         eta = std::max (M_PI/2. - eta, 0.);
         eta_increasing = false;
       }
 
 
+      double update_eta = std::max (updateTheta (1., params_.c, params_.e2, eta), 1e-4);
+      PCL_INFO ("update eta: %f\n", update_eta);
       if (eta_increasing)
-      {
-        double update_eta = updateTheta (1., params_.c, params_.e1, eta);
         eta += update_eta;
-      }
       else
       {
-        double update_eta = updateTheta (1., params_.c, params_.e1, eta);
         eta -= update_eta;
         PCL_INFO ("Eta decreasing new eta %f, update_eta %f\n", eta, update_eta);
       }
