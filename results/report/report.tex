@@ -295,7 +295,7 @@ What was described until now is applied to a single superellipse. In order to sp
 
 \begin{figure}
 \centering
-\includegraphics[width=0.75\columnwidth]{figures/sampling_smart_1}
+\includegraphics[width=0.75\columnwidth]{figures/sampling_smart_1}
 \includegraphics[width=0.75\columnwidth]{figures/sampling_smart_2}
 \caption {Superquadric sampling by adapting the angular parameter sampling so that the 3D space is uniformly sampled.}
 \label{fig:sampling_smart}
@@ -402,7 +402,7 @@ Figure \ref{fig:split_merge} shows a few results we got by using this algorithm 
 
 One of most popular techniques for detecting parametrized models in point cloud scenes is RANSAC \cite{fischler1981random}. Superquadric object detection has been tackled in \cite{afanasyev3d}, \cite{conf/caip/KrivicS01}, and \cite{conf/icra/BiegelbauerV07}, and we considered that the approach of Biegelbauer et al. \cite{conf/icra/BiegelbauerV07} had the most convincing results and we implemented it.
 
-Figure \ref{fig:superquadric_detection_schematic} shows the general idea behind Biegelbauer's solution. The first step is to preprocess the data by removing the largest plane and possibly segmenting clusters of points that might represent separate objects in order to ease the detection process. Next, we generate $m$ hypotheses by selecting $m$ ($\sim 20$) random seed points from the scene. Then, we find the points in the neighbourhood of the seed point of size equal to the minimum scaling parameter of the superquadric we are looking for ($min (a_1, a_2, a_3)$). Inside this small set of points, we randomly choose 30 points and try to rigidly align the superquadric we are looking for. We repeat this process $ransac\_restarts$ times ($\sim 10$) and choose the best fitting pose. This pose is then used as an initialisation for a fitting procedure that includes all the points in the neighborhood. We then compute the fitting error and the number of interior and surface points to the parametric model within a neighbourhood of size $1.2 * max(a,b,c)$ around the center of the superquadric. All the possible poses are ranked by the fitting error, number of surface and interior points and the one which has the lowest sum of ranks is chosen as the output.
+Figure \ref{fig:superquadric_detection_schematic} shows the general idea behind Biegelbauer's solution. The first step is to preprocess the data by removing the largest plane and possibly segmenting clusters of points that might represent separate objects in order to ease the detection process. Next, we generate $m$ hypotheses by selecting $m$ ($\sim 20$) random seed points from the scene. Then, we find the points in the neighbourhood of the seed point of size equal to the minimum scaling parameter of the superquadric we are looking for ($min (a_1, a_2, a_3)$). Inside this small set of points, we randomly choose 30 points and try to rigidly align the superquadric we are looking for. We repeat this process $ransac\_restarts$ times ($\sim 10$) and choose the best fitting pose. This pose is then used as an initialisation for a fitting procedure that includes all the points in the neighborhood. We then compute the fitting error and the number of interior and surface points to the parametric model within a neighbourhood of size $1.2 * max(a,b,c)$ around the center of the superquadric. All the possible poses are ranked by the fitting error, number of surface and interior points and the one which has the lowest sum of ranks is chosen as the output.
 
 \begin{figure}
 \centering
